@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.3.0 FATAL_ERROR)
 ###########################Package@#####################################
-project(SHERPA-MC LANGUAGES C  CXX Fortran )
+project(SHERPA-MC LANGUAGES C  CXX)
 #The complicated way to set the version is used to assure the simple 
 #replacement of version variable with sed will not break the CMakeLists.txt
 if (NOT __CL_VERSION__)
