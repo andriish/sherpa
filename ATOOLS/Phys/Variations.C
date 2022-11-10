@@ -13,8 +13,9 @@
 #include "MODEL/Main/Running_AlphaS.H"
 #include "BEAM/Main/Beam_Spectra_Handler.H"
 #include "PDF/Main/PDF_Base.H"
+#ifdef LHAPDF_PATH 
 #include "LHAPDF/LHAPDF.h"
-
+#endif
 namespace ATOOLS {
 
   Variations* s_variations;
@@ -88,11 +89,13 @@ Variations::Variations(Variations_Mode mode)
   int lhapdfverbosity(0);
   const bool needslhapdf(NeedsLHAPDF6Interface());
   if (needslhapdf) {
+#ifdef LHAPDF_PATH  
     if (!s_loader->LibraryIsLoaded("LHAPDFSherpa")) {
       THROW(fatal_error, "LHAPDF interface is not initialised.");
     }
     lhapdfverbosity = LHAPDF::verbosity();
     LHAPDF::setVerbosity(0);
+#endif
   }
 
   InitialiseParametersVector();
@@ -486,6 +489,7 @@ std::vector<Variations::PDFs_And_AlphaS> Variations::PDFsAndAlphaSVector(
   if (expandpdf) {
     // determine the number of set members to load
     bool lhapdflookupsuccessful(false);
+#ifdef LHAPDF_PATH    
     if (s_loader->LibraryIsLoaded("LHAPDFSherpa")) {
       const std::vector<std::string>& availablepdfsets(LHAPDF::availablePDFSets());
       if (std::find(availablepdfsets.begin(), availablepdfsets.end(), pdfstringparam)
@@ -495,6 +499,7 @@ std::vector<Variations::PDFs_And_AlphaS> Variations::PDFsAndAlphaSVector(
         lhapdflookupsuccessful = true;
       }
     }
+#endif
     if (!lhapdflookupsuccessful) {
       // the LHAPDF interface is not available or does not know about this set
       // provide a fallback at least for the default PDF set

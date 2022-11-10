@@ -726,8 +726,13 @@ bool Initialization_Handler::InitializeThePDFs()
        ++pdflib) {
     if (*pdflib=="None") continue;
     if (*pdflib=="LHAPDFSherpa") {
+#ifdef LHAPDF_PATH
       s_loader->AddPath(std::string(LHAPDF_PATH)+"/lib");
+#else
+      s_loader->AddPath(std::string("")+"/lib");
+#endif
       s_loader->LoadLibrary("LHAPDF");
+
     }
     void *init(s_loader->GetLibraryFunction(*pdflib,"InitPDFLib"));
     if (init==NULL) THROW(fatal_error,"Cannot load PDF library "+*pdflib);

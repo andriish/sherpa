@@ -7,7 +7,7 @@
  *          http://creativecommons.org/licenses/by/3.0/deed.en_US
  */
 
-#if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+#if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__)) 
 #include <unistd.h>
 #include <sys/resource.h>
 #if defined(__APPLE__) && defined(__MACH__)
@@ -16,7 +16,9 @@
 #include <stdio.h>
 #endif
 #else
-#error "Cannot define getPeakRSS( ) or getCurrentRSS( ) for an unknown OS."
+#include <stdio.h>
+
+#warning "Cannot define getPeakRSS( ) or getCurrentRSS( ) for an unknown OS."
 #endif
 
 size_t ATOOLS::GetPeakRSS( )
