@@ -9,7 +9,11 @@
 
 #include <sys/types.h>
 #include <signal.h>
+#ifdef WIN32
+#include "unistd.h"
+#else
 #include <unistd.h>
+#endif
 
 using namespace ATOOLS;
 

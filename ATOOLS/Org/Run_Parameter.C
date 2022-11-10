@@ -15,7 +15,11 @@
 #include "ATOOLS/Org/binreloc.h"
 #include "ATOOLS/Org/My_File.H"
 #include <stdlib.h>
+#ifdef WIN32
+#include "unistd.h"
+#else
 #include <unistd.h>
+#endif
 #include <pwd.h>
 #include <sys/time.h>
 #include <sys/resource.h>

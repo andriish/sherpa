@@ -28,7 +28,11 @@
 #endif
 
 #include <cassert>
+#ifdef WIN32
+#include "unistd.h"
+#else
 #include <unistd.h>
+#endif
 #include <cctype>
 
 using namespace SHERPA;

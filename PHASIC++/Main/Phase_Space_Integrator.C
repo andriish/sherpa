@@ -11,7 +11,11 @@
 #include "PHASIC++/Main/Process_Integrator.H"
 
 #include <signal.h>
+#ifdef WIN32
+#include "unistd.h"
+#else
 #include <unistd.h>
+#endif
 
 using namespace PHASIC;
 using namespace ATOOLS;

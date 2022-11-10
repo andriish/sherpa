@@ -9,7 +9,11 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 #include <fstream>
+#ifdef WIN32
+#include "unistd.h"
+#else
 #include <unistd.h>
+#endif
 #include <iomanip>
 #include <assert.h>
 

@@ -4,7 +4,11 @@
 #include <string>
 #include <vector>
 #include <sys/types.h>
-#include <unistd.h> 
+#ifdef WIN32
+#include "unistd.h"
+#else
+#include <unistd.h>
+#endif 
 
 namespace ATOOLS {
 

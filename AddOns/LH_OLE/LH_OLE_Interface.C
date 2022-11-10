@@ -10,7 +10,11 @@
 #include "ATOOLS/Math/Poincare.H"
 
 #include <sys/stat.h>
+#ifdef WIN32
+#include "unistd.h"
+#else
 #include <unistd.h>
+#endif
 
 using namespace OLE;
 using namespace PHASIC;

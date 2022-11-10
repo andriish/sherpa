@@ -3,7 +3,11 @@
 #include "ATOOLS/Org/Message.H"
 #include "ATOOLS/Org/Run_Parameter.H"
 #include "MODEL/Main/Model_Base.H"
+#ifdef WIN32
+#include "unistd.h"
+#else
 #include <unistd.h>
+#endif
 
 #include "sal.h"
 

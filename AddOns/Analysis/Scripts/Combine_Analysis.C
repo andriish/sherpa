@@ -4,7 +4,11 @@
 #include "ATOOLS/Org/Shell_Tools.H"
 #include "ATOOLS/Org/MyStrStream.H"
 #include <termios.h>
+#ifdef WIN32
+#include "unistd.h"
+#else
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <vector>

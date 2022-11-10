@@ -18,7 +18,11 @@
 #ifdef ENABLE_BINRELOC
 	#include <sys/types.h>
 	#include <sys/stat.h>
-	#include <unistd.h>
+	#ifdef WIN32
+#include "unistd.h"
+#else
+#include <unistd.h>
+#endif
 #endif /* ENABLE_BINRELOC */
 #include <stdio.h>
 #include <stdlib.h>

@@ -8,7 +8,6 @@
 #include <errno.h>
 #include <dirent.h>
 #include <cstdlib>
-#include <unistd.h>
 #include <regex.h>
 #if __GNUC__
 #include <cxxabi.h>
