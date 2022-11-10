@@ -39,6 +39,15 @@ typedef std::ios_base::fmtflags MyFmtFlags;
 #define IOS_BASE std::ios_base
 #endif
 
+#if defined(_MSC_VER)
+#include <sstream>
+#include <iomanip>
+// SGI IRIX C++ Compiler
+typedef std::stringstream MyStrStream;
+typedef std::ios_base::fmtflags MyFmtFlags;
+#define IOS_BASE std::ios_base
+#endif
+
 #include <map>
 #include <vector>
 

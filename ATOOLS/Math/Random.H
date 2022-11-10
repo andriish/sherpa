@@ -1,6 +1,6 @@
 #ifndef ATOOLS_Math_Random_H
 #define ATOOLS_Math_Random_H
-#define _USE_MATH_DEFINES
+
 #include <cmath>
 #include <limits>
 #include <fstream>
