@@ -12,6 +12,10 @@
 #define USE_LIMITS
 #endif
 
+#if defined(_MSC_VER) 
+#define USE_LIMITS
+#endif
+
 #ifdef USE_LIMITS
 #include <limits>
 #else
