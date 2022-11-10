@@ -248,7 +248,7 @@ else()
 endif()
 
 #One should have also zlib?
-FIND_LIBRARY(LIBZIP_LIBRARY NAMES zip PATHS "$ENV{LIB_DIR}/lib" "$ENV{LIB}" /usr/local/lib /usr/lib /usr/lib64 )
+FIND_LIBRARY(LIBZIP_LIBRARY NAMES zip PATHS "$ENV{LIB_DIR}/lib" "$ENV{LIB}" /usr/local/lib /usr/lib /usr/lib64  C:/vcpkg/packages/libzip_x86-windows/lib )
 message(STATUS "SHERPA: LIBZIP_LIBRARY=${LIBZIP_LIBRARY} LIBZIP_INCLUDE_DIRS=${LIBZIP_INCLUDE_DIRS}")
 
 add_subdirectory(AHADIC++)
