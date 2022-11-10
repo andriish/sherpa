@@ -28,6 +28,13 @@
 #include <math.h>
 #endif
 
+#ifdef _MSC_VER 
+#include <iostream>
+#include <math.h>
+#include <cmath>
+#include <cstdlib>
+#endif
+
 
 #include "ATOOLS/Math/MyComplex.H"
 
