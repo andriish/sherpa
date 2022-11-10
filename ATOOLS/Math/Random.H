@@ -1,7 +1,6 @@
 #ifndef ATOOLS_Math_Random_H
 #define ATOOLS_Math_Random_H
 
-#include <cmath>
 #include <limits>
 #include <fstream>
 #include <stddef.h>

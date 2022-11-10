@@ -3,11 +3,7 @@
 #include "MODEL/Main/Model_Base.H"
 #include "PDF/Main/Photon_PDF_Base.H"
 #include "PDF/SASG/SASGph_Fortran_Interface.H"
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 
 #include <iostream>
 

@@ -8,11 +8,7 @@
  */
 
 #if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 #include <sys/resource.h>
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach.h>

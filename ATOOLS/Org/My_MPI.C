@@ -3,11 +3,7 @@
 #include "ATOOLS/Org/Message.H"
 
 #include <csignal>
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 #include <algorithm>
 
 using namespace ATOOLS;

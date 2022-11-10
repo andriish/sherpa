@@ -2,11 +2,7 @@
 #include "ATOOLS/Org/Message.H"
 #include "ATOOLS/Org/Exception.H"
 #include "ATOOLS/Org/MyStrStream.H"
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 
 #include "PDF/Main/PDF_Base.H"
 #include "ATOOLS/Phys/Flavour.H"

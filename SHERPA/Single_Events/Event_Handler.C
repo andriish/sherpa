@@ -15,11 +15,7 @@
 #endif
 
 #include <signal.h>
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 
 #include <cassert>
 

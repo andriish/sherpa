@@ -2,11 +2,7 @@
 #include "ATOOLS/Org/MyStrStream.H"
 #include "ATOOLS/Org/Message.H"
 #include <iostream>
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 #include <time.h>
 
 using std::endl;

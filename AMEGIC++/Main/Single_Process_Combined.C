@@ -15,11 +15,7 @@
 #include "ATOOLS/Org/My_MPI.H"
 #include "ATOOLS/Org/Scoped_Settings.H"
 
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 
 using namespace AMEGIC;
 using namespace MODEL;

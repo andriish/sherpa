@@ -2706,11 +2706,7 @@ struct PrintUsageImplementation
  * will work.
  *
  * @code
- * #ifdef WIN32
-#include "unistd.h"
-#else
-#include <unistd.h>
-#endif  // write()
+ * #include <unistd.h>  // write()
  * #include <iostream>  // cout
  * #include <sstream>   // ostringstream
  * #include <cstdio>    // fwrite()

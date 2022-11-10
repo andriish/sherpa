@@ -2,11 +2,7 @@
 #include "ATOOLS/Org/Run_Parameter.H"
 #include "MODEL/Main/Model_Base.H"
 #include "PDF/GRV/GRVph_Fortran_Interface.H"
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 
 using namespace PDF;
 using namespace ATOOLS;

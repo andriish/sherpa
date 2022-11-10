@@ -2,11 +2,7 @@
 
 #include <stdlib.h> 
 #include <assert.h>
-#ifdef WIN32
-#include "unistd.h"
-#else
 #include <unistd.h>
-#endif
 
 
 int python_check_errors()
