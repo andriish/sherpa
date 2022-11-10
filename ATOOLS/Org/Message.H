@@ -9,6 +9,10 @@
 #include "ATOOLS/Org/STL_Tools.H"
 #include "ATOOLS/Org/CXXFLAGS.H"
 
+#ifdef _MSC_VER 
+#define __PRETTY_FUNCTION__ __FUNCSIG__ 
+#endif
+
 namespace ATOOLS {
 
   struct bm {
