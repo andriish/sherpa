@@ -131,7 +131,7 @@ include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
 if (MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" )
-  set(CXX_CXX_FLAGS_TO_CHECK  "/D_CRT_SECURE_NO_WARNINGS" "/wd4250" "/wd4018" "/wd4267" "/wd4244" "/wd4477" "/wd4251")
+  set(CXX_CXX_FLAGS_TO_CHECK  "/D_CRT_SECURE_NO_WARNINGS" "/wd4101" "/wd4250" "/wd4018" "/wd4267" "/wd4244" "/wd4477" "/wd4251")
   add_definitions(-D_USE_MATH_DEFINES=1)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/SherpaWindows)
 endif()  
