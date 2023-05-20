@@ -145,6 +145,7 @@ include(CheckCXXCompilerFlag)
 set(CXX_CXX_FLAGS_TO_CHECK -Wno-tautological-constant-compare)
 if (MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" )
 #Memory problem and false positive warnings.
+  include_directories(${PROJECT_SOURCE_DIR}/SherpaWindows)
   set(CXX_CXX_FLAGS_TO_CHECK "/bigobj" "/D_CRT_SECURE_NO_WARNINGS" "/wd4267" "/wd4244" "/wd4477" "/wd4251")
 endif()
 set ( NEW_CMAKE_CXX_FLAGS " ")
