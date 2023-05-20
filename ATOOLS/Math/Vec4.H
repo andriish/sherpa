@@ -113,16 +113,16 @@ namespace ATOOLS {
       const auto abs2 = Abs2();
       return (abs2 == 0) ? 0 : abs2/(m_x[0]*m_x[0]);
     }
-    Scalar Abs() const { return sqrt(Abs2()); }
+    Scalar Abs() const { return std::sqrt(Abs2()); }
     double Mass() const {
-      return sqrt(ATOOLS::Abs<Scalar>(Abs2()));
+      return std::sqrt(ATOOLS::Abs<Scalar>(Abs2()));
     }
     Scalar P() const { return PSpat(); }
 
     Scalar PPerp2() const { return m_x[1]*m_x[1]+m_x[2]*m_x[2]; }
-    Scalar PPerp() const { return sqrt(PPerp2()); }
+    Scalar PPerp() const { return std::sqrt(PPerp2()); }
     Scalar MPerp2() const { return (m_x[0]+m_x[3])*(m_x[0]-m_x[3]); }
-    Scalar MPerp() const { return sqrt(MPerp2()); }
+    Scalar MPerp() const { return std::sqrt(MPerp2()); }
     Scalar MPerp2(const Vec4<Scalar> &ref) const {
       return Abs2()+PPerp2(ref);
     }
@@ -132,15 +132,15 @@ namespace ATOOLS {
     Scalar EPerp2() const {
       return m_x[0]*m_x[0]*PPerp2()/PSpat2();
     }
-    Scalar EPerp() const { return sqrt(EPerp2()); }
+    Scalar EPerp() const { return std::sqrt(EPerp2()); }
     Scalar PPlus() const { return m_x[0]+m_x[3]; }
     Scalar PMinus() const { return m_x[0]-m_x[3]; }
 
     Scalar PSpat2() const {
       return m_x[1]*m_x[1]+m_x[2]*m_x[2]+m_x[3]*m_x[3];
     }
-    Scalar PSpat() const { return sqrt(PSpat2()); }
-    Scalar Y() const { return 0.5*log(PPlus()/PMinus()); }
+    Scalar PSpat() const { return std::sqrt(PSpat2()); }
+    Scalar Y() const { return 0.5*std::log(PPlus()/PMinus()); }
 
     inline Vec4<Scalar> Perp() const { 
       return Vec4<Scalar>(0.,m_x[1],m_x[2],0.);
