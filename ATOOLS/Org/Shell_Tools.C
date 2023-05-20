@@ -9,7 +9,9 @@
 #include <dirent.h>
 #include <cstdlib>
 #include <unistd.h>
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
 #include <regex.h>
+#endif
 #if __GNUC__
 #include <cxxabi.h>
 #endif
@@ -287,6 +289,8 @@ std::vector<std::string> ATOOLS::RegExMatch
 (const std::string &str,const std::string &pat,const size_t nm)
 {
   std::vector<std::string> res;
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
+
   regex_t re;
   if (regcomp(&re,pat.c_str(),REG_EXTENDED)!=0) return res;
   std::vector<regmatch_t> pm(nm);
@@ -296,6 +300,7 @@ std::vector<std::string> ATOOLS::RegExMatch
       res.push_back(str.substr(pm[i].rm_so,pm[i].rm_eo-pm[i].rm_so));
   }
   regfree(&re);
+#endif
   return res;
 }
 

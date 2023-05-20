@@ -7,7 +7,9 @@
 #include "ATOOLS/Org/CXXFLAGS.H"
 
 #include <sys/stat.h>
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
 #include <dlfcn.h>
+#endif
 #include <fstream>
 #include <unistd.h>
 #include <iomanip>
@@ -111,6 +113,7 @@ void *Library_Loader::LoadLibrary(const std::string &path,
 				  const std::string &name)
 {
   std::string fullpath(path+"/lib"+name+LIB_SUFFIX);
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
 
   struct stat buffer;
   if (stat(fullpath.c_str(),&buffer))
@@ -125,11 +128,15 @@ void *Library_Loader::LoadLibrary(const std::string &path,
   if (!RemoveLockFile(rpa->gen.Variable("HOME")+
 		      "/.sherpa/.liblock")) return NULL;
   if (!RemoveLockFile(lockname)) return NULL;
+
   char *err(dlerror());
   if (err!=NULL)
     THROW(fatal_error, std::string("Error loading library: ") + err);
   assert(module!=NULL);
   return module;
+#else
+return nullptr;
+#endif
 }
 
 void *Library_Loader::GetLibraryFunction(const std::string &libname,
@@ -138,6 +145,8 @@ void *Library_Loader::GetLibraryFunction(const std::string &libname,
   msg_Debugging()<<"executing library function '"<<funcname
 		 <<"' from 'lib"<<libname<<LIB_SUFFIX<<"' ... "<<std::flush;
   void *module(LoadLibrary(libname));
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
+
   if (module==NULL) return NULL;
   void *func(dlsym(module,funcname.c_str()));
   char *error(dlerror());
@@ -150,6 +159,9 @@ void *Library_Loader::GetLibraryFunction(const std::string &libname,
   }
   msg_Debugging()<<"done"<<std::endl;
   return func;
+#else
+return nullptr;
+#endif
 }
 
 void *Library_Loader::GetLibraryFunction(const std::string &libname,
@@ -166,6 +178,8 @@ void *Library_Loader::GetLibraryFunction(const std::string &libname,
 void *Library_Loader::GetLibraryFunction(const std::string &funcname,
 					 void * const & module) const
 {
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
+	
   void *func(dlsym(module,funcname.c_str()));
   char *error(dlerror());
   if (error!=NULL) {
@@ -177,6 +191,10 @@ void *Library_Loader::GetLibraryFunction(const std::string &funcname,
   }
   msg_Debugging()<<"done"<<std::endl;
   return func;
+#else
+
+return nullptr;
+#endif
 }
 
 void Library_Loader::AddPath(const std::string &path,const int mode)
