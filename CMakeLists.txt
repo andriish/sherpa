@@ -143,6 +143,10 @@ message(STATUS "SHERPA: CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}=${CMAKE_CXX_FLAGS_${
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 set(CXX_CXX_FLAGS_TO_CHECK -Wno-tautological-constant-compare)
+if (MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" )
+#Memory problem and false positive warnings.
+  set(CXX_CXX_FLAGS_TO_CHECK "/bigobj" "/D_CRT_SECURE_NO_WARNINGS" "/wd4267" "/wd4244" "/wd4477" "/wd4251")
+endif()
 set ( NEW_CMAKE_CXX_FLAGS " ")
 string(REPLACE " " ";" LIST_CMAKE_CXX_FLAGS "${CXX_CXX_FLAGS_TO_CHECK} ${CMAKE_CXX_FLAGS}")
 foreach(fx IN LISTS LIST_CMAKE_CXX_FLAGS)

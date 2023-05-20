@@ -258,7 +258,9 @@ namespace ATOOLS {
     .
   */
 }
-
+#ifndef __PRETTY_FUNCTION__
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
 #define msg_LevelIsEvents() \
   (ATOOLS::msg->LevelIsEvents() || \
    (!ATOOLS::msg->ContextEvents().empty() && ATOOLS::msg->LevelIsEvents(__PRETTY_FUNCTION__)))
