@@ -114,7 +114,7 @@ namespace ATOOLS {
       return (abs2 == 0) ? 0 : abs2/(m_x[0]*m_x[0]);
     }
     Scalar Abs() const { return std::sqrt(Abs2()); }
-    double Mass() const {
+    Scalar Mass() const {
       return std::sqrt(ATOOLS::Abs<Scalar>(Abs2()));
     }
     Scalar P() const { return PSpat(); }
@@ -127,7 +127,7 @@ namespace ATOOLS {
       return Abs2()+PPerp2(ref);
     }
     Scalar MPerp(const Vec4<Scalar> &ref) const {
-      return sqrt(MPerp2(ref));
+      return std::sqrt(MPerp2(ref));
     }
     Scalar EPerp2() const {
       return m_x[0]*m_x[0]*PPerp2()/PSpat2();
