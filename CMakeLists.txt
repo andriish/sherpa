@@ -150,6 +150,7 @@ if (MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" )
        "/wd4101" 
        "/wd4003" 
        "/wd4099" 
+       "/wd4805" 
        "/wd4302" 
        "/wd4311" 
        "/wd4334" 

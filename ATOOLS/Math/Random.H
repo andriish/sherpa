@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <fstream>
+#include <algorithm>
 #include <stddef.h>
 #include "ATOOLS/Math/MathTools.H"
 #include "ATOOLS/Org/Terminator_Objects.H"

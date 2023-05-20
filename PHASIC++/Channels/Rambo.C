@@ -6,6 +6,8 @@
 #include "ATOOLS/Org/Message.H"
 #include "ATOOLS/Math/Random.H"
 
+#include <algorithm>
+
 using namespace PHASIC;
 using namespace ATOOLS;
 
