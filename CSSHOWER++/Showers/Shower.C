@@ -29,7 +29,6 @@ Shower::Shower(PDF::ISR_Handler* isr, const int qcd, const int qed, int type)
   double is_as_fac{ s["CSS_IS_AS_FAC"].Get<double>() };
   double is_pdf_fac{ s["CSS_PDF_FAC"].Get<double>() };
   const double mth{ s["CSS_MASS_THRESHOLD"].Get<double>() };
-  m_use_bbw           = s["CSS_USE_BBW"].Get<int>();
   m_reweight          = s["CSS_REWEIGHT"].Get<bool>();
   m_maxreweightfactor = s["CSS_MAX_REWEIGHT_FACTOR"].Get<double>();
   m_kscheme           = s["CSS_KIN_SCHEME"].Get<int>();
@@ -62,10 +61,10 @@ Shower::Shower(PDF::ISR_Handler* isr, const int qcd, const int qed, int type)
   m_sudakov.SetCoupling(MODEL::s_model,k0sqi,k0sqf,is_as_fac,fs_as_fac);
   m_sudakov.SetReweightScaleCutoff(
       s["CSS_REWEIGHT_SCALE_CUTOFF"].Get<double>());
-  m_kinFF.SetEvolScheme(evol);
-  m_kinFI.SetEvolScheme(evol);
-  m_kinIF.SetEvolScheme(evol);
-  m_kinII.SetEvolScheme(evol);
+  m_kinFF.SetEvolScheme(evol-100*(evol/100));
+  m_kinFI.SetEvolScheme(evol-100*(evol/100));
+  m_kinIF.SetEvolScheme(evol/100);
+  m_kinII.SetEvolScheme(evol/100);
   m_last[0]=m_last[1]=m_last[2]=m_last[3]=NULL;
   p_old[0]=Cluster_Leg::New(NULL,Vec4D(),kf_none,ColorID());
   p_old[1]=Cluster_Leg::New(NULL,Vec4D(),kf_none,ColorID());
@@ -141,6 +140,8 @@ int Shower::UpdateDaughters(Parton *const split,Parton *const newpB,
   newpB->SetVeto(split->KtVeto());
   newpC->SetVeto(split->KtVeto());
   newpB->SetStat(split->Stat());
+  newpB->SetFromDec(split->FromDec());
+  newpC->SetFromDec(split->FromDec());
   if (split->GetNext()) {
     split->GetNext()->SetPrev(newpB);
     newpB->SetNext(split->GetNext());
@@ -252,7 +253,7 @@ int Shower::MakeKinematics
   if (stype&1) pi->SetBeam(split->Beam());
   if (stat==1) {
     if (split->GetType()==pst::IS &&
-	RemnantTest(pi,&split->LT())==-1) stat=-1;
+	RemnantTest(pi,NULL)==-1) stat=-1;
     if (split->GetSpect()->GetType()==pst::IS &&
 	RemnantTest(split->GetSpect(),
 		    split->GetType()==pst::IS?
@@ -296,9 +297,10 @@ int Shower::MakeKinematics
                        return varweight * Reweight(&varparams, *split);
                      });
   }
+  Singlet * singlet = split->GetSing();
   split->GetSing()->SplitParton(split,pi,pj);
-  for (PLiter plit(split->GetSing()->begin());
-       plit!=split->GetSing()->end();++plit)
+  for (PLiter plit(singlet->begin());
+       plit!=singlet->end();++plit)
     (*plit)->UpdateDaughters();
   return 1;
 }
@@ -594,18 +596,21 @@ double Shower::Reweight(QCD_Variation_Params* varparams,
       // calculate new J
       const double lastJ(info.sf->Lorentz()->LastJ());
       double newJ;
+      double muF2fac {1.0};
+      if (varparams->m_showermuF2enabled)
+	muF2fac = varparams->m_muF2fac;
       switch (type) {
       case cstp::II:
         newJ = info.sf->Lorentz()->JII(
-            info.z, info.y, info.x, varparams->m_showermuF2fac * info.scale);
+            info.z, info.y, info.x, muF2fac * info.scale);
         break;
       case cstp::IF:
         newJ = info.sf->Lorentz()->JIF(
-            info.z, info.y, info.x, varparams->m_showermuF2fac * info.scale);
+            info.z, info.y, info.x, muF2fac * info.scale);
         break;
       case cstp::FI:
         newJ = info.sf->Lorentz()->JFI(
-            info.y, info.x, varparams->m_showermuF2fac * info.scale);
+            info.y, info.x, muF2fac * info.scale);
         break;
       case cstp::FF:
       case cstp::none:
@@ -634,8 +639,11 @@ double Shower::Reweight(QCD_Variation_Params* varparams,
     if (info.sf->Coupling()->AllowsAlternativeCouplingUsage()) {
       // insert new AlphaS
       const double lastcpl {info.sf->Coupling()->Last()};
+      double muR2fac {1.0};
+      if (varparams->m_showermuR2enabled)
+	muR2fac = varparams->m_muR2fac;
       info.sf->Coupling()->SetAlternativeUnderlyingCoupling(
-          varparams->p_alphas, varparams->m_showermuR2fac);
+          varparams->p_alphas, muR2fac);
       // calculate new coupling
       double newcpl {info.sf->Coupling()->Coupling(info.scale, 0)};
       // clean up

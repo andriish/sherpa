@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -31,3 +32,14 @@ target_include_directories(SherpaLHOLE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS SherpaLHOLE DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaLHOLE        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaLHOLE SOVERSION 0.0.0)
 set_target_properties(SherpaLHOLE        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(LH_OLE_SOURCES LH_OLE_Interface.C
+                   LH_OLE_Communicator.C)
+
+set(LH_OLE_HEADERS LH_OLE_Communicator.H)
+
+sherpa_create_git_info(LH_OLE)
+ 
+add_library(SherpaLHOLE SHARED ${LH_OLE_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(SherpaLHOLE SherpaLHOLE)
+>>>>>>> upstream/master

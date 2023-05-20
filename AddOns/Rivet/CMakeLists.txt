@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Manually edited
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -31,3 +32,19 @@ set_target_properties(SherpaRivetAnalysis        PROPERTIES POSITION_INDEPENDENT
 set_target_properties(SherpaRivetAnalysis        PROPERTIES DEFINE_SYMBOL "")
 target_link_libraries(SherpaRivetAnalysis PRIVATE ${RIVET_LIBRARIES})
 target_include_directories(SherpaRivetAnalysis PRIVATE ${RIVET_INCLUDE_DIR})
+=======
+set(Rivet_SOURCES Rivet_Interface.C)
+sherpa_create_git_info(Rivet)
+
+add_library(SherpaRivetAnalysis SHARED ${Rivet_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C)
+sherpa_handle_shared_library(SherpaRivetAnalysis SherpaRivetAnalysis)
+target_compile_features(SherpaRivetAnalysis PRIVATE cxx_std_14)
+target_link_libraries(SherpaRivetAnalysis PRIVATE ${RIVET_LIBRARIES})
+target_include_directories(SherpaRivetAnalysis PRIVATE ${RIVET_INCLUDE_DIR} ${RIVET_CONFIG_CPPFLAGS_DIRS})
+if (Rivet_HEPMC2_FOUND)
+  target_include_directories(SherpaRivetAnalysis PRIVATE ${HEPMC2_INCLUDE_DIRS})
+endif()
+if (Rivet_HEPMC3_FOUND)
+  target_include_directories(SherpaRivetAnalysis PRIVATE ${HEPMC3_INCLUDE_DIR})
+endif()
+>>>>>>> upstream/master

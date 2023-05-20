@@ -9,6 +9,7 @@
 #include "ATOOLS/Math/Vector.H"
 #include "ATOOLS/Phys/Particle.H"
 #include <set>
+#include "ATOOLS/Org/Scoped_Settings.H"
 
 namespace METOOLS {
   class Spin_Amplitudes;
@@ -62,11 +63,15 @@ namespace PHASIC {
     double m_ideltawidth;
 
     /**
-      * m_active=0: Disabled decay channel, but contributes to total width
-      * m_active=1: Enabled decay channel
-      * m_active=-1: Disabled decay channel, and does not contribute to width
-      */
-    int m_active;
+     * m_active[n] specifies the status of the decay channel for the decay
+     * of the <n>'th particle of this type in the event.
+     * It can take the following values: m_active[n]=
+     *   0: Disabled decay channel, but contributes to total width
+     *   1: Enabled decay channel
+     *   2: Forced decay channel
+     *   -1: Disabled decay channel, and does not contribute to width
+     */
+    std::vector<int> m_active;
 
     ATOOLS::Flavour_Vector m_flavours;
     std::vector<METOOLS::Spin_Amplitudes*> m_diagrams;
@@ -95,6 +100,7 @@ namespace PHASIC {
     std::string IDCode() const;
     static std::string IDCode(const ATOOLS::Flavour& decayer,
                               const ATOOLS::Flavour_Vector& daughters);
+    std::string FSIDCode();
     inline const double& Width() const { return m_width; }
     inline const double& DeltaWidth() const { return m_deltawidth; }
     inline const double& IWidth() const { return m_iwidth; }
@@ -104,8 +110,14 @@ namespace PHASIC {
     inline const double& Max() const { return m_max; }
     inline void SetMax(const double& max) { m_max=max; }
     inline const double& MinimalMass() const { return m_minmass; }
-    inline int Active() const { return m_active; }
-    inline void SetActive(int active) { m_active=active; }
+    inline int Active(const size_t& count) const { return count<m_active.size() ? m_active[count] : m_active[0]; }
+    inline const std::vector<int>& Active() const { return m_active; }
+    inline void SetActive(std::vector<int> active) { m_active=active; }
+    inline void SetActive(size_t count, int active) {
+      if (count>=m_active.size()) m_active.resize(count+1,m_active[0]);
+      m_active[count]=active;
+    }
+    inline void SetActiveAll(int active) { for (size_t i=0; i<m_active.size(); ++i) m_active[i]=active; }
 
     double GenerateMass(const double& max, const double &width) const;
     double SymmetryFactor();

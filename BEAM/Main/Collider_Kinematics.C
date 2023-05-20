@@ -39,21 +39,17 @@ void Collider_Kinematics::InitSystem() {
 }
 
 void Collider_Kinematics::InitIntegration() {
-  Beam_Parameters parameters;
-  // check for if they have been initialised to other values
-  double sminratio = parameters("BEAM_SMIN");
-  double smaxratio = parameters("BEAM_SMAX");
   m_xmin = p_beams[0]->Xmin() * p_beams[1]->Xmin();
   m_xmax = p_beams[0]->Xmax() * p_beams[1]->Xmax();
-  m_smin = m_S * Max(m_xmin, sminratio);
-  m_smax = m_S * Min(m_xmax, smaxratio);
+  m_smin = m_S * m_xmin;
+  m_smax = m_S * m_xmax;
   m_ymin = -10.;
   m_ymax = 10.;
   m_exponent[0] = .5;
   m_exponent[1] = .98 * (p_beams[0]->Exponent() + p_beams[1]->Exponent());
 }
 
-bool Collider_Kinematics::operator()(ATOOLS::Vec4D *moms) {
+bool Collider_Kinematics::operator()(ATOOLS::Vec4D_Vector& moms) {
   m_sprime = m_sprimekey[3];
   if (m_sprime < m_sprimekey[0] || m_sprime > m_sprimekey[1]) {
     msg_Error() << METHOD << "(..): " << om::red << "s' out of bounds.\n"

@@ -7,83 +7,36 @@ using namespace ATOOLS;
 using namespace std;
 
 Decay_Map::Decay_Map(const Mass_Selector* ms) :
-  map<Flavour, std::vector<Decay_Table*>, FlavourComp>(FlavourComp(ms)), p_ms(ms)
+  map<Flavour, Decay_Table*, FlavourComp>(FlavourComp(ms)), p_ms(ms)
 {
 }
 
 Decay_Map::~Decay_Map()
 {
   for (Decay_Map::iterator pos = this->begin(); pos != this->end(); ++pos) {
-    for(size_t i=0; i<pos->second.size(); i++) {
-      delete pos->second[i];
-    }
+    delete pos->second;
   }
 }
 
 bool Decay_Map::Knows(const ATOOLS::Flavour & decayer)
 {
-  Decay_Map::iterator it = find(decayer);
-  if(it==end()) {
-    it = find(decayer.Bar());
-  }
-  if(it==end()) return false;
-  else return true;
+  return (FindDecay(decayer)!=NULL);
 }
 
 Decay_Table* Decay_Map::FindDecay(const ATOOLS::Flavour & decayer)
 {
-  Flavour tempdecayer=decayer;
   Decay_Map::iterator it = find(decayer);
   if(it==end()) {
     it = find(decayer.Bar());
-    tempdecayer=decayer.Bar();
   }
   if(it==end()) return NULL;
-
-  // there may be multiple decay tables for one flavour, so find the right one
-  int count = it->second.size()-1; // default to last decay table available
-  map<ATOOLS::Flavour,int>::iterator counterit = m_counters.find(tempdecayer);
-  if(counterit!=m_counters.end() &&
-     counterit->second < int(it->second.size()-1) )
-  {
-    count = counterit->second;
-    counterit->second++;
-  }
-  return it->second[count];
-}
-
-pair<Decay_Table*, Decay_Channel*> Decay_Map::FindDecayChannel(string name,
-                                                               bool create)
-{
-  Flavour_Vector flavs;
-  std::replace(name.begin(),name.end(),',',' ');
-  auto pdgcodes = ToVector<int>(name);
-  transform(pdgcodes.begin(), pdgcodes.end(), back_inserter(flavs),
-            [](int i) -> Flavour { return Flavour(i); });
-  
-  Decay_Table* dt = FindDecay(flavs[0]);
-  if (dt) {
-    Decay_Channel::SortFlavours(flavs);
-    for (Decay_Table::iterator it=dt->begin(); it!=dt->end(); ++it) {
-      if ((*it)->Flavs()==flavs) return make_pair(dt, (*it));
-    }
-    if (create) {
-      Decay_Channel* dc = new Decay_Channel(flavs[0], p_ms);
-      for (int j=1; j<flavs.size(); ++j) dc->AddDecayProduct(flavs[j]);
-      dc->SetActive(0);
-      dt->AddDecayChannel(dc);
-      return make_pair(dt, dc);
-    }
-    else return make_pair(dt, (Decay_Channel*) NULL);
-  }
-  else return make_pair((Decay_Table*) NULL, (Decay_Channel*) NULL);
+  else return it->second;
 }
 
 void Decay_Map::ResetCounters()
 {
-  map<ATOOLS::Flavour,int>::iterator it;
-  for(it=m_counters.begin(); it!=m_counters.end(); it++) {
-    it->second=0;
+  for (Decay_Map::const_iterator it=begin(); it!=end(); ++it) {
+    it->second->ResetCounter();
   }
 }
 
@@ -102,9 +55,7 @@ namespace PHASIC {
   std::ostream &operator<<(std::ostream &os,const Decay_Map &dm)
   {
     for (Decay_Map::const_iterator it=dm.begin(); it!=dm.end(); ++it) {
-      for (size_t i=0; i<it->second.size(); ++i) {
-        os<<*(it->second.at(i))<<endl;
-      }
+      os<<*(it->second)<<endl;
     }
     return os;
   }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -23,3 +24,14 @@ target_include_directories(DireGauge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS DireGauge DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(DireGauge        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME DireGauge SOVERSION 0.0.0)
 set_target_properties(DireGauge        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Gauge_SOURCES GGG.C
+                  GQQ.C
+                  QQG.C
+                  QQQQ.C)
+
+sherpa_create_git_info(Gauge)
+ 
+add_library(DireGauge SHARED ${Gauge_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(DireGauge DireGauge)
+>>>>>>> upstream/master

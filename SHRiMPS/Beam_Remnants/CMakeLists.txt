@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -25,3 +26,19 @@ target_include_directories(ShrimpsBeamRemnants PRIVATE ${CMAKE_CURRENT_SOURCE_DI
 install(TARGETS ShrimpsBeamRemnants DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(ShrimpsBeamRemnants        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME ShrimpsBeamRemnants SOVERSION 0.0.0)
 set_target_properties(ShrimpsBeamRemnants        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Beam_Remnants_SOURCES Continued_PDF.C
+                          Hadron_Dissociation.C
+                          Remnant_Handler.C
+                          Colour_Generator.C)
+
+set(Beam_Remnants_HEADERS Continued_PDF.H
+                          Hadron_Dissociation.H
+                          Remnant_Handler.H
+                          Colour_Generator.H)
+
+sherpa_create_git_info(Beam_Remnants)
+ 
+add_library(ShrimpsBeamRemnants SHARED ${Beam_Remnants_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(ShrimpsBeamRemnants ShrimpsBeamRemnants)
+>>>>>>> upstream/master

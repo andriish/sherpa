@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,23 @@ target_include_directories(Remnants PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS Remnants DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(Remnants        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME Remnants SOVERSION 0.0.0)
 set_target_properties(Remnants        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES Remnant_Handler.C
+                 Remnant_Base.C
+                 Hadron_Remnant.C
+                 Electron_Remnant.C
+                 Photon_Remnant.C
+                 No_Remnant.C)
+
+set(Main_HEADERS Remnant_Handler.H
+                 Remnant_Base.H
+                 Hadron_Remnant.H
+                 Electron_Remnant.H
+                 Photon_Remnant.H
+                 No_Remnant.H)
+
+sherpa_create_git_info(Main)
+ 
+add_library(Remnants SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(Remnants Remnants)
+>>>>>>> upstream/master

@@ -385,7 +385,10 @@ bool PT_Selector::Trigger(Selector_List &sl)
 
 void PT_Selector::BuildCuts(Cut_Data * cuts)
 {
-  if (m_isnlo) return;
+  if (m_isnlo) {
+    cuts->smin=ATOOLS::Max(cuts->smin, m_smin);
+    return;
+  }
   double sumM2=0.;
   for (int i=m_nin;i<m_n;i++) {
     sumM2+=sqr(p_fl[i].SelMass());
@@ -487,7 +490,10 @@ bool ET_Selector::Trigger(Selector_List &sl)
 
 void ET_Selector::BuildCuts(Cut_Data * cuts)
 {
-  if (m_isnlo) return;
+    if (m_isnlo) {
+    cuts->smin=ATOOLS::Max(cuts->smin, m_smin);
+    return;
+  }
   double sumM2=0.;
   for (int i=m_nin;i<m_n;i++) {
     sumM2+=sqr(p_fl[i].SelMass());
@@ -771,7 +777,10 @@ bool IMass_Selector::Trigger(Selector_List &sl)
 
 void IMass_Selector::BuildCuts(Cut_Data * cuts)
 {
-  if (m_isnlo) return;
+  if (m_isnlo) {
+    cuts->smin=ATOOLS::Max(cuts->smin, m_smin);
+    return;
+  }
   for (size_t i=m_nin;i<m_n;i++) {
     for (size_t j=i+1;j<m_n;j++) {
       if ( (m_flav1.Includes(p_fl[i]) && m_flav2.Includes(p_fl[j])) ||
@@ -1357,8 +1366,8 @@ bool DeltaPhi_Selector::Trigger(Selector_List &sl)
 {
   DEBUG_FUNC(m_on);
   if (!m_on) return true;
-  for (size_t i=m_nin;i<m_n;i++) {
-    for (size_t j=i+1;j<m_n;j++) {
+  for (size_t i=m_nin;i<sl.size();i++) {
+    for (size_t j=i+1;j<sl.size();j++) {
       if (sl[i].Momentum()==Vec4D(0.,0.,0.,0.)) continue;
       if ( (m_flav1.Includes(sl[i].Flavour()) &&
             m_flav2.Includes(sl[j].Flavour())) ||
@@ -1967,13 +1976,13 @@ bool Isolation_Cut::Trigger(Selector_List &sl)
   DEBUG_FUNC(m_on);
   if (!m_on) return true;
   vector<size_t> vfsub;
-  for (size_t i=m_nin;i<m_n;i++)
+  for (size_t i=m_nin;i<sl.size();i++)
     if (m_iflav.Includes(sl[i].Flavour())) vfsub.push_back(i);
   const vector<size_t> *const vf(&vfsub);
   for (size_t k=0;k<vf->size();k++) {
     double egamma=sl[(*vf)[k]].Momentum().PPerp();
     vector<edrt> edrlist;
-    for (size_t i=m_nin;i<m_n;i++) {
+    for (size_t i=m_nin;i<sl.size();i++) {
       if (Flavour(kf_jet).Includes(sl[i].Flavour()) ||
           (sl[i].Flavour().Strong() && sl[i].Flavour().Mass()<m_massmax)) {
         double dr=DR(sl[(*vf)[k]].Momentum(),sl[i].Momentum());

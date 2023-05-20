@@ -1,7 +1,9 @@
 #include "METOOLS/SpinCorrelations/Amplitude2_Matrix.H"
+#include "METOOLS/Main/Polarization_Tools.H"
 
 #include "ATOOLS/Org/Exception.H"
 #include "ATOOLS/Phys/Particle.H"
+#include "ATOOLS/Math/Poincare.H"
 
 using namespace METOOLS;
 using namespace ATOOLS;
@@ -41,6 +43,19 @@ void Amplitude2_Matrix::Normalise()
   for (size_t i(0); i<size(); ++i) (*this)[i]*=factor;
 }
 
+void Amplitude2_Matrix::PolBasisTrafo(vector<vector<Complex>> coeff, vector<vector<Complex>> conj_coeff) {
+  METOOLS::Amplitude2_Matrix old_matrix(*this);
+  for (size_t a(0); a < m_nhel*m_nhel; ++a) {
+    Complex value(0, 0);
+    // calculate one new element of amplitude matrix in new spin basis
+    for (size_t c(0); c < m_nhel * m_nhel; ++c) {
+      value += coeff[a - (a / m_nhel) * m_nhel][c - (c / m_nhel) * m_nhel] * conj_coeff[a / m_nhel][c / m_nhel] *
+               old_matrix[c];
+    }
+    (*this)[a] = value;
+  }
+}
+
 Complex Amplitude2_Matrix::operator*(const Amplitude2_Matrix& sigma) const
 {
   Complex result(0.0,0.0);
@@ -55,7 +70,7 @@ Complex Amplitude2_Matrix::operator*(const Amplitude2_Matrix& sigma) const
 namespace METOOLS {
   std::ostream& operator<<(std::ostream& ostr, const Amplitude2_Matrix& m) {
     ostr<<"   Matrix with "<<m.m_nhel<<" spin combinations for "
-        <<m.Particle()->RefFlav()<<":"<<std::endl;
+        <<(m.Particle()?m.Particle()->RefFlav():Flavour(kf_none))<<":"<<std::endl;
     for(size_t i=0;i<m.m_nhel;i++) {
       for(size_t j=0;j<m.m_nhel;j++) {
         ostr<<m(i,j)<<", ";

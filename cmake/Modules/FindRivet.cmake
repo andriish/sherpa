@@ -25,15 +25,19 @@ if (RIVET_ROOT_DIR OR RIVET_DIR OR (DEFINED ENV{RIVET_ROOT_DIR}) OR (DEFINED ENV
 endif()
 
 if (RIVET_SEARCH_DIRS)
+  find_program(RIVET_MKHTML_EXE NAMES rivet-mkhtml PATHS ${RIVET_SEARCH_DIRS} PATH_SUFFIXES bin NO_DEFAULT_PATH )
+  find_program(RIVET_CONFIG_EXE NAMES rivet-config PATHS ${RIVET_SEARCH_DIRS} PATH_SUFFIXES bin NO_DEFAULT_PATH )
   find_program(RIVET_EXE NAMES rivet PATHS ${RIVET_SEARCH_DIRS} PATH_SUFFIXES bin NO_DEFAULT_PATH )
-  find_path(RIVET_DATA_PATH ATLAS_2012_I1094061.yoda PATH_SUFFIXES share/Rivet/)
+  find_path(RIVET_DATA_PATH ATLAS_2012_I1094061.yoda PATHS ${RIVET_SEARCH_DIRS} PATH_SUFFIXES share/Rivet/ NO_DEFAULT_PATH)
   find_path(RIVET_INCLUDE_DIR Rivet/Rivet.hh PATHS ${RIVET_SEARCH_DIRS} PATH_SUFFIXES include NO_DEFAULT_PATH)
   find_library(RIVET_LIBRARY NAMES Rivet PATHS ${RIVET_SEARCH_DIRS}  PATH_SUFFIXES lib lib64 NO_DEFAULT_PATH)
 else()
-  find_program(RIVET_EXE NAMES rivet PATHS ${RIVET_SEARCH_DIRS} PATH_SUFFIXES bin)
-  find_path(RIVET_DATA_PATH ATLAS_2012_I1094061.yoda PATH_SUFFIXES share/Rivet/)
-  find_path(RIVET_INCLUDE_DIR Rivet/Rivet.hh PATH_SUFFIXES include)
-  find_library(RIVET_LIBRARY NAMES Rivet PATHS_SUFFIXES lib lib64)
+  find_program(RIVET_MKHTML_EXE NAMES rivet-mkhtml)
+  find_program(RIVET_CONFIG_EXE NAMES rivet-config)
+  find_program(RIVET_EXE NAMES rivet)
+  find_path(RIVET_DATA_PATH ATLAS_2012_I1094061.yoda PATH_SUFFIXES share/Rivet/ ../share/Rivet/)
+  find_path(RIVET_INCLUDE_DIR Rivet/Rivet.hh PATH_SUFFIXES include ../include)
+  find_library(RIVET_LIBRARY NAMES Rivet PATH_SUFFIXES lib lib64 ../lib ../lib64)
 endif()
 set(RIVET_VERSION 0.0.0)
 if (RIVET_INCLUDE_DIR)
@@ -53,13 +57,51 @@ if (RIVET_INCLUDE_DIR)
   endif()
 endif()
 
+set(RIVET_CONFIG_LIBS_STRING)
+set(RIVET_CONFIG_CPPFLAGS_STRING)
+set(RIVET_CONFIG_CPPFLAGS_DIRS "")
+set(RIVET_CONFIG_LIBS "")
+set( RIVET_CONFIG_LIB_DIRS "")
+if (RIVET_CONFIG_EXE)
+  execute_process(COMMAND ${RIVET_CONFIG_EXE} --libs
+                  OUTPUT_VARIABLE RIVET_CONFIG_LIBS_STRING
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REPLACE " " ";" TEMP_RIVET_LIBS  ${RIVET_CONFIG_LIBS_STRING})
+  foreach (fl ${TEMP_RIVET_LIBS})
+  if ("${fl}" MATCHES "-l.*")
+    string(REPLACE "-l" ""  flx "${fl}")
+    list(APPEND RIVET_CONFIG_LIBS "${flx}")
+  endif()
+  if ("${fl}" MATCHES "-L.*")
+    string(REPLACE "-L" ""  fly "${fl}")
+    list(APPEND RIVET_CONFIG_LIB_DIRS "${fly}")
+  endif()
+  endforeach()
+  execute_process(COMMAND ${RIVET_CONFIG_EXE} --cppflags
+                  OUTPUT_VARIABLE RIVET_CONFIG_CPPFLAGS_STRING
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REPLACE "-I" "" TEMP_RIVET_CONFIG_CPPFLAGS_DIRS  ${RIVET_CONFIG_CPPFLAGS_STRING})
+  string(REPLACE " " ";" RIVET_CONFIG_CPPFLAGS_DIRS  ${TEMP_RIVET_CONFIG_CPPFLAGS_DIRS})
+  execute_process(COMMAND ${RIVET_CONFIG_EXE} --pythonpath
+                  OUTPUT_VARIABLE RIVET_CONFIG_PYTHONPATH_STRING
+                  OUTPUT_STRIP_TRAILING_WHITESPACE) 
+endif()
 
-mark_as_advanced(RIVET_INCLUDE_DIR RIVET_LIBRARY RIVET_EXE)
-
-# handle the QUIETLY and REQUIRED arguments and set RIVET_FOUND to TRUE if
-# all listed variables are TRUE
+mark_as_advanced(RIVET_INCLUDE_DIR RIVET_LIBRARY RIVET_EXE RIVET_CONFIG_LIBS_STRING 
+                               RIVET_CONFIG_CPPFLAGS_STRING 
+                               RIVET_CONFIG_CPPFLAGS_DIRS
+                               RIVET_CONFIG_LIBS
+                               RIVET_CONFIG_LIB_DIRS)
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Rivet HANDLE_COMPONENTS REQUIRED_VARS RIVET_INCLUDE_DIR RIVET_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Rivet HANDLE_COMPONENTS REQUIRED_VARS RIVET_INCLUDE_DIR RIVET_LIBRARY 
+                               RIVET_DATA_PATH
+                               RIVET_CONFIG_LIBS_STRING 
+                               RIVET_CONFIG_CPPFLAGS_STRING 
+                               RIVET_CONFIG_CPPFLAGS_DIRS
+                               RIVET_CONFIG_LIBS
+                               RIVET_CONFIG_LIB_DIRS
+                               VERSION_VAR RIVET_VERSION
+                               )
 
 set(RIVET_LIBRARIES ${RIVET_LIBRARY})
 get_filename_component(RIVET_LIBRARY_DIRS ${RIVET_LIBRARY} PATH)
@@ -69,6 +111,3 @@ set(RIVET_ANALYSIS_PATH ${RIVET_ANALYSIS_PATH}/Rivet)
 set(RIVET_INCLUDE_DIRS ${RIVET_INCLUDE_DIR})
 
 mark_as_advanced(RIVET_FOUND)
-
-
-

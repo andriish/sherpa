@@ -675,6 +675,12 @@ Weights_Map Single_Process::Differential(const Vec4D_Vector& p,
   // perform on-the-fly QCD reweighting of BVI or RS events
   m_last *= nominal;
   if (varmode != Variations_Mode::nominal_only && s_variations->Size() > 0) {
+    if (m_mewgtinfo.m_oqcd == 99) {
+      THROW(not_implemented,
+            "O(AlphaS)=99 detected when calculating variations.\n"
+            "This is likely due to the ME generator/hard process\n"
+            "not supporting on-the-fly reweighting.");
+    }
     if (GetSubevtList() == nullptr) {
       ReweightBVI(scales->Amplitudes());
     } else {
@@ -1030,10 +1036,14 @@ ATOOLS::Cluster_Sequence_Info Single_Process::ClusterSequenceInfo(
   p_int->ISR()->SetPDF(varparams.p_pdf1, 0);
   p_int->ISR()->SetPDF(varparams.p_pdf2, 1);
 
+  double muF2fac {1.0};
+  if (varparams.m_showermuF2enabled)
+    muF2fac = varparams.m_muF2fac;
+
   ATOOLS::Cluster_Sequence_Info csi(
       ClusterSequenceInfo(info.m_ampls,
                           Q2, varparams.m_muF2fac, mur2fac,
-                          varparams.m_showermuF2fac,
+                          muF2fac,
                           varparams.p_alphas,
                           nominalcsi));
 
@@ -1074,7 +1084,11 @@ double Single_Process::MuR2(
   Single_Process::BornLikeReweightingInfo & info) const
 {
   double mu2new(info.m_muR2 * varparams.m_muR2fac);
-  if ((varparams.m_showermuR2fac != 1.0) && (m_pinfo.m_ckkw & 1)) {
+  double showermu2fac {1.0};
+  if (varparams.m_showermuR2enabled)
+    showermu2fac = varparams.m_muR2fac;
+
+  if ((showermu2fac != 1.0) && (m_pinfo.m_ckkw & 1)) {
     ATOOLS::ClusterAmplitude_Vector &ampls = info.m_ampls;
     if (ampls.size()) {
       // go through cluster sequence
@@ -1090,7 +1104,7 @@ double Single_Process::MuR2(
         if (oqcd > 0.0) {
           double mu2(Max(ampl->Mu2(), MODEL::as->CutQ2()));
           mu2 = Min(mu2, sqr(rpa->gen.Ecms()));
-          const double mu2new(mu2 * varparams.m_showermuR2fac);
+          const double mu2new(mu2 * showermu2fac);
           minmu2 = Min(minmu2, mu2new);
           const double alphasnew(varparams.p_alphas->BoundedAlphaS(mu2new));
           alphasnewproduct *= pow(alphasnew, oqcd);
@@ -1100,7 +1114,7 @@ double Single_Process::MuR2(
       const double oqcdremainder(ampl->OrderQCD() - (m_pinfo.Has(nlo_type::vsub) ? 1 : 0));
       if (oqcdremainder) {
         const double mu2(Max(ampl->Mu2(), MODEL::as->CutQ2()));
-        const double mu2new(mu2 * varparams.m_showermuR2fac);
+        const double mu2new(mu2 * showermu2fac);
         minmu2 = Min(minmu2, mu2new);
         const double alphasnew(varparams.p_alphas->BoundedAlphaS(mu2new));
         alphasnewproduct *= pow(alphasnew, oqcdremainder);
@@ -1109,7 +1123,7 @@ double Single_Process::MuR2(
       if (oqcdsum) {
         // solve for new mu2
         const double alphasnewaverage(pow(alphasnewproduct, 1.0 / oqcdsum));
-        const double maxmu2(varparams.m_showermuR2fac * 1.01 * sqr(rpa->gen.Ecms()));
+        const double maxmu2(showermu2fac * 1.01 * sqr(rpa->gen.Ecms()));
         mu2new = MODEL::as->WDBSolve(alphasnewaverage, minmu2, maxmu2);
       }
     }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -25,3 +26,24 @@ target_include_directories(NNLOqT PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS NNLOqT DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(NNLOqT        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME NNLOqT SOVERSION 0.0.0)
 set_target_properties(NNLOqT        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(NNLO_SOURCES polylog.c
+                 Tools.C
+                 QT_Selector.C
+                 DIS_Selector.C
+                 Scale_Setter.C
+                 coeffqt.C
+                 param.C
+                 hard.C
+                 DY_KFactor.C
+                 higgsfullsm.C
+                 H_KFactor.C
+                 DISinclu.C
+                 DIS_KFactor.C
+                 DIS_Scale.C)
+
+sherpa_create_git_info(NNLO)
+ 
+add_library(NNLOqT SHARED ${NNLO_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(NNLOqT NNLOqT)
+>>>>>>> upstream/master

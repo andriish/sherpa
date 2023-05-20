@@ -1,11 +1,6 @@
 #include "AMEGIC++/Phasespace/Channel_Generator_Base.H"
 #include "AMEGIC++/Main/Topology.H"
 #include "AMEGIC++/Main/Point.H"
-#ifdef __GNUC__
-#if __GNUC__ < 3
-#include <stdio.h>
-#endif
-#endif
 
 using namespace AMEGIC;
 using namespace ATOOLS;
@@ -29,7 +24,7 @@ string Channel_Generator_Base::GetMassIndex(string &str)
   char c = str[0];
   c<58 ? c-=48 : c-=55;
   char hc[4];
-  sprintf(hc,"%i",c);
+  snprintf(hc,4,"%i",c);
   return string(hc);
 }
 
@@ -38,7 +33,7 @@ string Channel_Generator_Base::GetMassIndex(char &str)
   char c = str;
   c<58 ? c-=48 : c-=55;
   char hc[4];
-  sprintf(hc,"%i",c);
+  snprintf(hc,4,"%i",c);
   return string(hc);
 }
 

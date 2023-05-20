@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,15 @@ target_include_directories(CSMain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS CSMain DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(CSMain        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME CSMain SOVERSION 0.0.0)
 set_target_properties(CSMain        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES CS_Cluster_Definitions.C
+                 CS_Shower.C)
+
+set(Main_HEADERS CS_Cluster_Definitions.H
+                 CS_Shower.H)
+
+sherpa_create_git_info(Main)
+ 
+add_library(CSMain SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(CSMain CSMain)
+>>>>>>> upstream/master

@@ -5,6 +5,7 @@
 #include "ATOOLS/Org/Data_Writer.H"
 #include "ATOOLS/Org/Strings.H"
 #include "ATOOLS/Org/Shell_Tools.H"
+#include "ATOOLS/Org/Run_Parameter.H"
 
 using namespace ATOOLS;
 
@@ -101,6 +102,17 @@ void Settings::DeclareMatrixSettingsWithEmptyDefault(
   }
 }
 
+bool Settings::HasDefault(const std::vector<std::string> &keys) const {
+  return (m_defaults.find(keys) != m_defaults.end());
+}
+
+void Settings::ResetDefault(const std::vector<std::string> &keys) {
+  const auto it = m_defaults.find(keys);
+  if (it == m_defaults.end())
+    return;
+  m_defaults.erase(it);
+}
+
 bool Settings::IsSetExplicitly(const Settings_Keys& keys)
 {
   for (auto& reader : m_yamlreaders)
@@ -151,7 +163,9 @@ String_Vector Settings::GetConfigFiles()
   } else {
     s.SetDefault(std::vector<std::string>{});
   }
-  return s.GetVector<std::string>();
+  String_Vector ret=s.GetVector<std::string>();
+  ret.insert(ret.begin(), rpa->gen.Variable("SHERPA_SHARE_PATH")+"/Decaydata.yaml");
+  return ret;
 }
 
 bool Settings::IsScalar(const Settings_Keys& keys)

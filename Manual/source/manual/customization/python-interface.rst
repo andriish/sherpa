@@ -8,28 +8,29 @@ Certain Sherpa classes and methods can be made available to the Python
 interpreter in the form of an extension module. This module can be
 loaded in Python and provides access to certain functionalities of the
 Sherpa event generator in Python. In order to build the module, Sherpa
-must be configured with the option :option:`--enable-pyext`. Running
-``make`` then invokes the automated interface generator SWIG
+must be configured with the option :option:`-DSHERPA_ENABLE_PYTHON=ON`.
+Running ``make`` then invokes the automated interface generator SWIG
 :cite:`Beazley2003` to create the Sherpa module using the Python C/C++
 API. SWIG version 1.3.x or later is required for a successful build.
 Problems might occur if more than one version of Python is present on
 the system since automake currently doesn't always handle multiple
 Python installations properly. If you have multiple Python versions
 installed on your system, please set the ``PYTHON`` environment
-variable to the Python 2 executable via
+variable to the Python 3 executable via
 
 .. code-block:: shell-session
 
-   $ export PYTHON=<path-to-python2>
+   $ export PYTHON=<path-to-python3>
 
-before executing the ``configure`` script (see.  Certain Sherpa
+before executing ``cmake`` script (see.  Certain Sherpa
 classes and methods can be made available to the Python interpreter in
 the form of an extension module. This module can be loaded in Python
 and provides access to certain functionalities of the Sherpa event
 generator in Python. It was designed specifically for the computation
 of matrix elements in python (:ref:`APIexamples`) and its features are
 currently limited to this purpose. In order to build the module,
-Sherpa must be configured with the option :option:`--enable-pyext`.
+Sherpa must be configured with the option
+:option:`-DSHERPA_ENABLE_PYTHON=ON`.
 Running ``make`` then invokes the automated interface generator SWIG
 :cite:`Beazley2003` to create the Sherpa module using the Python C/C++
 API. SWIG version 1.3.x or later is required for a successful build.

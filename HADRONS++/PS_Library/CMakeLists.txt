@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,21 @@ target_include_directories(HadronsPSs PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS HadronsPSs DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(HadronsPSs        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME HadronsPSs SOVERSION 0.0.0)
 set_target_properties(HadronsPSs        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(PS_Library_SOURCES HD_PS_Base.C
+                       Three_Body_PSs.C
+                       Two_Body_PSs.C
+                       Four_Body_PSs.C
+                       ResonanceFlavour.C)
+
+set(PS_Library_HEADERS HD_PS_Base.H
+                       Three_Body_PSs.H
+                       Two_Body_PSs.H
+                       Four_Body_PSs.H
+                       ResonanceFlavour.H)
+
+sherpa_create_git_info(PS_Library)
+ 
+add_library(HadronsPSs SHARED ${PS_Library_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(HadronsPSs HadronsPSs)
+>>>>>>> upstream/master

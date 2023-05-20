@@ -2,11 +2,10 @@
 #define ATOOLS_Math_MathTools_H
 /*  Declarations for discrete functions  */
 
-#ifdef __GNUC__
-// GNU C++ Compiler
 #include <cmath>
 #include <cstdlib>
 
+<<<<<<< HEAD
 /*
   if __GNUC__ == 3 && __GNUC_MINOR__ == 0.
   if defined __GNUC__ && defined __cplusplus && __GNUC_MINOR__ >= 8
@@ -36,6 +35,8 @@
 #endif
 
 
+=======
+>>>>>>> upstream/master
 #include "ATOOLS/Math/MyComplex.H"
 
 namespace ATOOLS {

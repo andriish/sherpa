@@ -114,10 +114,10 @@ and all massless quarks, as set by
 A list of particle containers is printed at the start of each Sherpa
 run, when the :ref:`OUTPUT` is set at level :option:`2`.
 
-.. index:: PARTICLE_CONTAINER
+.. index:: PARTICLE_CONTAINERS
 
 It is also possible to define a custom particle container using the
-keyword ``PARTICLE_CONTAINER``. The container must be given an
+keyword ``PARTICLE_CONTAINERS``. The container must be given an
 unassigned particle ID (kf-code) and its name (freely chosen by you)
 and the flavour content must be specified.  An example would be the
 collection of all down-type quarks using the unassigned ID 98, which
@@ -125,7 +125,7 @@ could be declared as
 
 .. code-block:: yaml
 
-   PARTICLE_CONTAINER:
+   PARTICLE_CONTAINERS:
      98:
        Name: downs
        Flavours: [1, -1, 3, -3, 5, -5]
@@ -149,7 +149,7 @@ following can be used:
 
    PARTICLE_DATA:
      5: {Massive: true}
-   PARTICLE_CONTAINER:
+   PARTICLE_CONTAINERS:
      98: {Name: B, Flavours: [5, -5]}
    PROCESSES:
    - 11 -11 -> (93,98) (93,98):
@@ -281,32 +281,63 @@ syntax as describes in :ref:`Selectors`.
 Order
 =====
 
-Sets a process-specific coupling order.  Orders are counted at the
-amplitude level.  For example, the process 1 -1 -> 2 -2 would have
+Restricts the coupling order of the process calculation at the
+**squared**-amplitude level.
+For example, the process 1 -1 -> 2 -2 could have
 orders ``{QCD: 2, EW: 0``}, ``{QCD: 1, EW: 1}`` and ``{QCD: 0,
-EW: 2}``. There can also be a third entry that is model specific
-(e.g. for HEFT couplings). Half-integer orders are so far supported
-only by Comix.  The word "Any" can be used as a wildcard.
+EW: 2}``. There can also be further entries with different names, that are
+model specific (e.g. for EFT couplings).
+Half-integer orders are so far supported only by Comix, e.g. ``{EW: 4.5, NP: 0.5}``.
+
+To set coupling orders at the amplitude level, e.g. to get more predictable
+Feynman diagram output, you may use the ``Amplitude_Order`` setting.
+
+The word "Any" can be used as a wildcard, but might lead to problems when
+external matrix elements (e.g. loops) are used which require an exact
+specification of the order.
 
 Note that for decay chains this setting applies to the full process,
 see :ref:`Decay` and :ref:`DecayOS`.
-
 
 .. _Max_Order:
 
 Max_Order
 =========
 
-Sets a process-specific maximum coupling order.  See :ref:`Order` for
-the syntax and additional information.
+Maximum coupling order allowed.  Same syntax as in :ref:`Order`.
 
 .. _Min_Order:
 
 Min_Order
 =========
 
-Sets a process-specific minimum coupling order.  See :ref:`Order` for
-the syntax and additional information.
+Minimum coupling order allowed.  Same syntax as in :ref:`Order`.
+
+.. _Amplitude_Order:
+
+Amplitude_Order
+===============
+
+Restricts the coupling order of the process calculation at the (non-squared)
+amplitude level. For example, the process 1 -1 -> 2 -2 could have
+amplitude orders of ``{QCD: 2, EW: 0``} and ``{QCD: 0, EW: 2}``.
+
+See :ref:`Order` for the syntax and additional information.
+
+.. _Min_Amplitude_Order:
+
+Min_Amplitude_Order
+===================
+
+Minimum coupling order allowed at the amplitude level.  See :ref:`Amplitude_Order`.
+
+.. _Max_Amplitude_Order:
+
+Max_Amplitude_Order
+===================
+
+Maximum coupling order allowed at the amplitude level.  See :ref:`Amplitude_Order`.
+
 
 .. _Min_N_Quarks:
 

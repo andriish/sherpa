@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,17 @@ target_include_directories(PhotonsMain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS PhotonsMain DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(PhotonsMain        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME PhotonsMain SOVERSION 0.0.0)
 set_target_properties(PhotonsMain        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES Photons.C
+                 Define_Dipole.C
+                 Dipole_Type.C)
+
+set(Main_HEADERS Photons.H
+                 Dipole_Type.H
+                 Define_Dipole.H)
+
+sherpa_create_git_info(Main)
+ 
+add_library(PhotonsMain SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(PhotonsMain PhotonsMain)
+>>>>>>> upstream/master

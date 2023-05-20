@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,12 @@ target_include_directories(SherpaInitialization PRIVATE ${CMAKE_CURRENT_SOURCE_D
 install(TARGETS SherpaInitialization DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaInitialization        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaInitialization SOVERSION 0.0.0)
 set_target_properties(SherpaInitialization        PROPERTIES DEFINE_SYMBOL "")
+=======
+ 
+set(Initialization_SOURCES  Initialization_Handler.C)
+set(Initialization_HEADERS Initialization_Handler.H)
+sherpa_create_git_info(Initialization)
+ 
+add_library(SherpaInitialization SHARED ${Initialization_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C)
+sherpa_handle_shared_library(SherpaInitialization SherpaInitialization)
+>>>>>>> upstream/master

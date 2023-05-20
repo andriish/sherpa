@@ -21,12 +21,12 @@ if (CERNLIB_INCLUDE_DIR AND CERNLIB_LIBRARY_DIR)
   SET (CERNLIB_PLISTS_LIB_DIR CERNLIB_PLISTS_LIB_DIR-NOTFOUND)
 endif (CERNLIB_INCLUDE_DIR AND CERNLIB_LIBRARY_DIR)
 
-MESSAGE(STATUS "Looking for CERNLIB...")
-
 FIND_PATH(CERNLIB_INCLUDE_DIR NAMES CERNLIB PATHS  
   $ENV{CERN_ROOT}/include  
   /usr/include/cernlib/2006
   /usr/include/cernlib/2022
+  /usr/include/cernlib/2023
+  /usr/include/cernlib/2024
   NO_DEFAULT_PATH 
 )
 
@@ -36,6 +36,8 @@ FIND_PATH(CERNLIB_LIBRARY_DIR NAMES  libpacklib.a   libkernlib.a libmathlib.a   
   /usr/lib64/cernlib/2022/lib
   /usr/lib/cernlib/2006/lib
   /usr/lib/cernlib/2022/lib
+  /usr/lib/cernlib/2023/lib
+  /usr/lib/cernlib/2024/lib
   NO_DEFAULT_PATH
 )
 
@@ -45,15 +47,11 @@ endif (CERNLIB_LIBRARY_DIR)
 
 set(cernlibs kernlib packlib mathlib graflib grafX11)  
 if (CERNLIB_FOUND)
-  if (NOT CERNLIB_FIND_QUIETLY)
-    MESSAGE(STATUS "Looking for CERNLIB... - found ${CERNLIB_LIBRARY_DIR}")
-endif (NOT CERNLIB_FIND_QUIETLY)
-  
+
 
 set(CERN_DYNAMIC_LIBRARIES)
 set(CERN_STATIC_LIBRARIES)
 foreach(_cpt ${cernlibs})
-
   find_library(CERN_${_cpt}_DYNAMIC_LIBRARY lib${_cpt}.so ${_cpt} HINTS ${CERNLIB_LIBRARY_DIR})
   if(CERN_${_cpt}_DYNAMIC_LIBRARY)
     mark_as_advanced(CERN_${_cpt}_DYNAMIC_LIBRARY)
@@ -65,7 +63,6 @@ foreach(_cpt ${cernlibs})
     mark_as_advanced(CERN_${_cpt}_STATIC_LIBRARY)
     list(APPEND CERN_STATIC_LIBRARIES ${CERN_${_cpt}_STATIC_LIBRARY})
   endif()
- 
 endforeach()
 
 list(REMOVE_DUPLICATES CERN_DYNAMIC_LIBRARIES)
@@ -76,8 +73,10 @@ else (CERNLIB_FOUND)
   message(FATAL_ERROR "Looking for CERNLIB... - Not found")
   endif (CERNLIB_FIND_REQUIRED)
 endif (CERNLIB_FOUND)
+set(CERNLIB_VERSION 0.0.0)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(CERNLIB REQUIRED_VARS CERN_STATIC_LIBRARIES CERN_DYNAMIC_LIBRARIES
+                                 VERSION_VAR CERNLIB_VERSION
+                                 )
 
 
 SET(LD_LIBRARY_PATH ${LD_LIBRARY_PATH} ${CERNLIB_LIBRARY_DIR})
-
-

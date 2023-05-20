@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Manually edited
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -36,6 +37,19 @@ target_include_directories(SherpaHZToolAnalysis PRIVATE ${CMAKE_CURRENT_SOURCE_D
 install(TARGETS SherpaHZToolAnalysis DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaHZToolAnalysis        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaHZToolAnalysis SOVERSION 0.0.0)
 set_target_properties(SherpaHZToolAnalysis        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(HZTool_SOURCES hznorm.F
+                   hztool_sherpa.F
+                   HZTool_Interface.C)
+
+set(HZTool_HEADERS HZTool_Wrapper.H)
+
+sherpa_create_git_info(HZTool)
+ 
+add_library(SherpaHZToolAnalysis SHARED ${HZTool_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(SherpaHZToolAnalysis SherpaHZToolAnalysis)
+
+>>>>>>> upstream/master
 target_include_directories( SherpaHZToolAnalysis PRIVATE ${HZTOOL_INCLUDE_DIR} )
 target_link_libraries( SherpaHZToolAnalysis PRIVATE ${HZTOOL_LIBRARY} 
 ${CERN_kernlib_DYNAMIC_LIBRARY}

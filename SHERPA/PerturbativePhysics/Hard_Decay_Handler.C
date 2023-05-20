@@ -4,7 +4,6 @@
 #include "ATOOLS/Org/Data_Reader.H"
 #include "ATOOLS/Org/Return_Value.H"
 #include "ATOOLS/Org/Shell_Tools.H"
-#include "ATOOLS/Org/Scoped_Settings.H"
 #include "ATOOLS/Phys/Blob_List.H"
 #include "ATOOLS/Phys/Cluster_Amplitude.H"
 #include "ATOOLS/Phys/NLO_Subevt.H"
@@ -20,6 +19,7 @@
 #include "PHASIC++/Channels/Rambo.H"
 #include "PHASIC++/Channels/Decay_Dalitz.H"
 #include "METOOLS/Main/Spin_Structure.H"
+#include "METOOLS/SpinCorrelations/Polarized_CrossSections_Handler.H"
 #include "ATOOLS/Org/Run_Parameter.H"
 #include "SHERPA/SoftPhysics/Soft_Photon_Handler.H"
 #include "ATOOLS/Phys/Variations.H"
@@ -48,9 +48,16 @@ public:
   { return (a.first->Momentum()[0]<b.first->Momentum()[0]); }
 };
 
+class ParticlePairPairFirstEnergySort {
+public:
+  bool operator()(const ParticlePairPair& a,const ParticlePairPair& b)
+  { return (a.first.first->Momentum()[0]+a.first.second->Momentum()[0]
+            <b.first.first->Momentum()[0]+b.first.second->Momentum()[0]); }
+};
+
 Hard_Decay_Handler::Hard_Decay_Handler() :
   p_newsublist(NULL), m_resultdir(""), m_offshell(""),
-  m_decay_tau(false), m_set_widths(false), m_use_ho_sm_widths(true),
+  m_decay_tau(false), m_set_widths(false),
   m_br_weights(true), m_usemass(true), m_min_prop_width(0.0)
 {
   auto& s = Settings::GetMainSettings();
@@ -64,11 +71,6 @@ Hard_Decay_Handler::Hard_Decay_Handler() :
   m_br_weights      = ds["Apply_Branching_Ratios"].SetDefault(true).Get<bool>();
   m_decay_tau       = ds["Decay_Tau"].SetDefault(false).Get<bool>();
   m_set_widths      = ds["Set_Widths"].SetDefault(false).Get<bool>();
-  m_use_ho_sm_widths= ds["Use_HO_SM_Widths"].SetDefault(true).Get<bool>();
-  if (m_use_ho_sm_widths &&
-      (Flavour(kf_h0).Mass()<125.07 || Flavour(kf_h0).Mass()>125.11 ||
-       Flavour(kf_t).Mass()<172.4 || Flavour(kf_t).Mass()>172.6))
-    THROW(fatal_error, "Use_HO_SM_Widths specified, but particle masses not in SM range.");
   m_min_prop_width  = ds["Min_Prop_Width"].SetDefault(0.0).Get<double>();
   m_int_accuracy    = ds["Int_Accuracy"].SetDefault(0.01).Get<double>();
   m_int_niter       = ds["Int_NIter"].SetDefault(2500).Get<int>();
@@ -84,6 +86,16 @@ Hard_Decay_Handler::Hard_Decay_Handler() :
     MakeDir(m_resultdir, true);
 
   m_spincorr=rpa->gen.HardSC();
+  m_polcrosssec = ds["Pol_Cross_Section"]["Enabled"].SetDefault(false).Get<bool>();
+  // if also final state polarization should be enabled, initialize polarization handler in a separate method in the
+  // Initialization_Handler analogous to the Hard_Decay_Handler
+  if (m_polcrosssec){
+    if (!m_spincorr){
+      THROW(fatal_error, "Calculation of polarized cross sections only possible together with spin correlations")
+    }
+    p_polarization_handler = new METOOLS::Polarized_CrossSections_Handler();
+  }
+
 
   // also need to tell shower whats massive now
   // TODO: need to use the same mass-selector
@@ -103,16 +115,12 @@ Hard_Decay_Handler::Hard_Decay_Handler() :
     Flavour flav(it->first);
     if (Decays(flav)) {
       Decay_Table* dt=new Decay_Table(flav, this);
-      vector<Decay_Table*> decaytables;
-      decaytables.push_back(dt);
-      p_decaymap->insert(make_pair(flav,decaytables));
+      p_decaymap->insert(make_pair(flav,dt));
       ReadDecayTable(flav);
     }
     if (flav!=flav.Bar() && Decays(flav.Bar())) {
       Decay_Table* dt=new Decay_Table(flav.Bar(), this);
-      vector<Decay_Table*> decaytables;
-      decaytables.push_back(dt);
-      p_decaymap->insert(make_pair(flav.Bar(),decaytables));
+      p_decaymap->insert(make_pair(flav.Bar(),dt));
       ReadDecayTable(flav.Bar());
     }
   }
@@ -121,19 +129,34 @@ Hard_Decay_Handler::Hard_Decay_Handler() :
   Decay_Map::iterator dmit;
   msg_Debugging()<<"Initialising hard decay tables: two-body decays.\n";
   for (dmit=p_decaymap->begin(); dmit!=p_decaymap->end(); ++dmit) {
-    InitializeDirectDecays(dmit->second.at(0));
+    InitializeDirectDecays(dmit->second);
   }
   msg_Debugging()<<"Initialising hard decay tables: three-body decays.\n";
   for (dmit=p_decaymap->begin(); dmit!=p_decaymap->end(); ++dmit) {
-    InitializeOffshellDecays(dmit->second.at(0));
+    InitializeOffshellDecays(dmit->second);
+    dmit->second->UpdateChannelStatuses();
   }
-  msg_Debugging()<<"Initialising hard decay tables: customizing decay tables.\n";
-  ApplySMWidths();
-  CustomizeDecayTables();
+
+
+  // overwrite partial widths from HO SM or user input
+  if (ds["Use_HO_SM_Widths"].SetDefault(true).Get<bool>()) {
+    if (Flavour(kf_h0).Mass()<125.07 || Flavour(kf_h0).Mass()>125.11 ||
+        Flavour(kf_t).Mass()<172.4 || Flavour(kf_t).Mass()>172.6)
+      THROW(fatal_error, "Use_HO_SM_Widths specified, but particle masses not in SM range.");
+    SetHOSMWidths(ds);
+  }
+  for (dmit=p_decaymap->begin(); dmit!=p_decaymap->end(); ++dmit) {
+    for (auto dc: *(dmit->second)) {
+      auto s = ds["Channels"][dc->IDCode()]["Width"];
+      if (!s.HasDefault()) s.SetDefault(dc->IWidth());
+      dc->SetWidth(s.Get<double>());
+    }
+    dmit->second->UpdateWidth();
+  }
 
   if (m_set_widths)
     for (dmit=p_decaymap->begin(); dmit!=p_decaymap->end(); ++dmit) {
-      dmit->second.at(0)->Flav().SetWidth(dmit->second.at(0)->TotalWidth());
+      dmit->second->Flav().SetWidth(dmit->second->TotalWidth());
     }
 
   if (p_decaymap->size()) msg_Info()<<endl<<*p_decaymap<<endl;
@@ -259,6 +282,9 @@ void Hard_Decay_Handler::InitializeDirectDecays(Decay_Table* dt)
     dc->Channels()->Add(rambo);
     dc->Channels()->Reset();
 
+    auto s = Settings::GetMainSettings()["HARD_DECAYS"]["Channels"][dc->IDCode()];
+    dc->SetActive(s["Status"].SetDefault(dc->Active()).GetVector<int>());
+
     if (CalculateWidth(dc)) dt->AddDecayChannel(dc);
     else delete dc;
   }
@@ -273,11 +299,11 @@ void Hard_Decay_Handler::InitializeOffshellDecays(Decay_Table* dt) {
     Decay_Channel* dc=dt->at(i);
     vector<Decay_Channel*> new_dcs=ResolveDecay(dc);
     if (TriggerOffshell(dc, new_dcs)) {
-      dc->SetActive(-1);
+      dc->SetActiveAll(-1);
       for (size_t j=0; j<new_dcs.size(); ++j) {
         // check for duplicates
         Decay_Channel* dup=dt->GetDecayChannel(new_dcs[j]->Flavs());
-        if (dup && dup->Active()>=0) {
+        if (dup && dup->Active(0)>=0) {
           DEBUG_INFO("Adding new diagram to "<<*dup);
           for (size_t k=0; k<new_dcs[j]->GetDiagrams().size(); ++k) {
             dup->AddDiagram(new_dcs[j]->GetDiagrams()[k]);
@@ -293,6 +319,8 @@ void Hard_Decay_Handler::InitializeOffshellDecays(Decay_Table* dt) {
         }
         else {
           DEBUG_INFO("Adding "<<new_dcs[j]->Name());
+          auto s = Settings::GetMainSettings()["HARD_DECAYS"]["Channels"][new_dcs[j]->IDCode()];
+          new_dcs[j]->SetActive(s["Status"].SetDefault(new_dcs[j]->Active()).GetVector<int>());
           dt->AddDecayChannel(new_dcs[j]);
         }
       }
@@ -300,7 +328,7 @@ void Hard_Decay_Handler::InitializeOffshellDecays(Decay_Table* dt) {
     else {
       DEBUG_INFO("Keeping factorised.");
       for (size_t j=0; j<new_dcs.size(); ++j) {
-        if (new_dcs[j]) new_dcs[j]->SetActive(-1);
+        if (new_dcs[j]) new_dcs[j]->SetActiveAll(-1);
       }
     }
   }
@@ -309,97 +337,41 @@ void Hard_Decay_Handler::InitializeOffshellDecays(Decay_Table* dt) {
 }
 
 
-void Hard_Decay_Handler::ApplySMWidths()
+void Hard_Decay_Handler::SetHOSMWidths(ATOOLS::Scoped_Settings& s)
 {
-  if (!m_use_ho_sm_widths) return;
-
-  std::map<std::string, double> ho_sm_widths;
   // Higgs WG BRs 2022
-  ho_sm_widths["25,5,-5"]    = 2.382E-03;
-  ho_sm_widths["25,15,-15"]  = 2.565E-04;
-  ho_sm_widths["25,13,-13"]  = 8.901E-07;
-  ho_sm_widths["25,4,-4"]    = 1.182E-04;
-  ho_sm_widths["25,3,-3"]    = 1E-06;
-  ho_sm_widths["25,21,21"]   = 3.354E-04;
-  ho_sm_widths["25,22,22"]   = 9.307E-06;
-  ho_sm_widths["25,23,22"]   = 6.318E-06;
-  ho_sm_widths["24,2,-1"]    = 0.7041;
-  ho_sm_widths["24,4,-3"]    = 0.7041;
-  ho_sm_widths["24,12,-11"]  = 0.2256;
-  ho_sm_widths["24,14,-13"]  = 0.2256;
-  ho_sm_widths["24,16,-15"]  = 0.2256;
-  ho_sm_widths["-24,-2,1"]   = 0.7041;
-  ho_sm_widths["-24,-4,3"]   = 0.7041;
-  ho_sm_widths["-24,-12,11"] = 0.2256;
-  ho_sm_widths["-24,-14,13"] = 0.2256;
-  ho_sm_widths["-24,-16,15"] = 0.2256;
-  ho_sm_widths["23,1,-1"]    = 0.3828;
-  ho_sm_widths["23,2,-2"]    = 0.2980;
-  ho_sm_widths["23,3,-3"]    = 0.3828;
-  ho_sm_widths["23,4,-4"]    = 0.2980;
-  ho_sm_widths["23,5,-5"]    = 0.3828;
-  ho_sm_widths["23,11,-11"]  = 0.0840;
-  ho_sm_widths["23,12,-12"]  = 0.1663;
-  ho_sm_widths["23,13,-13"]  = 0.0840;
-  ho_sm_widths["23,14,-14"]  = 0.1663;
-  ho_sm_widths["23,15,-15"]  = 0.0840;
-  ho_sm_widths["23,16,-16"]  = 0.1663;
-  ho_sm_widths["6,24,5"]     = 1.32;
-  ho_sm_widths["-6,-24,-5"]  = 1.32;
-
-  for (const auto& channel_width : ho_sm_widths) {
-    std::string channelid = channel_width.first;
-    double width = channel_width.second;
-    pair<Decay_Table*, Decay_Channel*> match=p_decaymap->FindDecayChannel(channelid, true);
-    Decay_Channel* dc = match.second;
-    if (!match.first || !dc) {
-      PRINT_INFO("Ignoring unknown decay channel: " << channelid);
-      continue;
-    }
-    dc->SetWidth(width);
-  }
+  s["Channels"]["25,5,-5"]   ["Width"].SetDefault(2.382E-03);
+  s["Channels"]["25,15,-15"] ["Width"].SetDefault(2.565E-04);
+  s["Channels"]["25,13,-13"] ["Width"].SetDefault(8.901E-07);
+  s["Channels"]["25,4,-4"]   ["Width"].SetDefault(1.182E-04);
+  s["Channels"]["25,3,-3"]   ["Width"].SetDefault(1E-06);
+  s["Channels"]["25,21,21"]  ["Width"].SetDefault(3.354E-04);
+  s["Channels"]["25,22,22"]  ["Width"].SetDefault(9.307E-06);
+  s["Channels"]["25,23,22"]  ["Width"].SetDefault(6.318E-06);
+  s["Channels"]["24,2,-1"]   ["Width"].SetDefault(0.7041);
+  s["Channels"]["24,4,-3"]   ["Width"].SetDefault(0.7041);
+  s["Channels"]["24,12,-11"] ["Width"].SetDefault(0.2256);
+  s["Channels"]["24,14,-13"] ["Width"].SetDefault(0.2256);
+  s["Channels"]["24,16,-15"] ["Width"].SetDefault(0.2256);
+  s["Channels"]["-24,-2,1"]  ["Width"].SetDefault(0.7041);
+  s["Channels"]["-24,-4,3"]  ["Width"].SetDefault(0.7041);
+  s["Channels"]["-24,-12,11"]["Width"].SetDefault(0.2256);
+  s["Channels"]["-24,-14,13"]["Width"].SetDefault(0.2256);
+  s["Channels"]["-24,-16,15"]["Width"].SetDefault(0.2256);
+  s["Channels"]["23,1,-1"]   ["Width"].SetDefault(0.3828);
+  s["Channels"]["23,2,-2"]   ["Width"].SetDefault(0.2980);
+  s["Channels"]["23,3,-3"]   ["Width"].SetDefault(0.3828);
+  s["Channels"]["23,4,-4"]   ["Width"].SetDefault(0.2980);
+  s["Channels"]["23,5,-5"]   ["Width"].SetDefault(0.3828);
+  s["Channels"]["23,11,-11"] ["Width"].SetDefault(0.0840);
+  s["Channels"]["23,12,-12"] ["Width"].SetDefault(0.1663);
+  s["Channels"]["23,13,-13"] ["Width"].SetDefault(0.0840);
+  s["Channels"]["23,14,-14"] ["Width"].SetDefault(0.1663);
+  s["Channels"]["23,15,-15"] ["Width"].SetDefault(0.0840);
+  s["Channels"]["23,16,-16"] ["Width"].SetDefault(0.1663);
+  s["Channels"]["6,24,5"]    ["Width"].SetDefault(1.32);
+  s["Channels"]["-6,-24,-5"] ["Width"].SetDefault(1.32);
 }
-
-void Hard_Decay_Handler::CustomizeDecayTables()
-{
-  auto s = Settings::GetMainSettings()["HARD_DECAYS"]["Channels"];
-  DEBUG_FUNC(s.GetKeys().size());
-  for (const auto& decay : s.GetKeys()) {
-    DEBUG_VAR(decay);
-
-    // obtain decay channel (creating it if appropriate)
-    pair<Decay_Table*, Decay_Channel*> match=p_decaymap->FindDecayChannel(decay, true);
-    Decay_Channel* dc = match.second;
-    if (!match.first || !dc) {
-      PRINT_INFO("Ignoring unknown decay channel: " << decay);
-      continue;
-    }
-
-    DEBUG_VAR(dc->Name());
-
-    // update properties
-    for (const auto& propname : s[decay].GetKeys()) {
-      auto propsetting = s[decay][propname];
-      DEBUG_VAR(propname);
-      if (propname == "Status") {
-        match.first->SetChannelStatus
-          (dc,propsetting.SetDefault(dc->Active()).Get<int>());
-      }
-      else if (propname == "Width") {
-        dc->SetWidth(propsetting.SetDefault(dc->Width()).Get<double>());
-        dc->SetDeltaWidth(0.0);
-      }
-      else {
-        THROW(fatal_error,
-              "Unknown HARD_DECAYS:Channels property '" + propname + "'");
-      }
-    }
-  }
-  for (Decay_Map::iterator dmit=p_decaymap->begin(); dmit!=p_decaymap->end(); ++dmit) {
-    dmit->second.at(0)->UpdateWidth();
-  }
-}
-
 
 bool Hard_Decay_Handler::TriggerOffshell(Decay_Channel* dc, vector<Decay_Channel*> new_dcs) {
   DEBUG_FUNC(dc->Name()<<"... "<<new_dcs.size());
@@ -537,11 +509,12 @@ bool Hard_Decay_Handler::CalculateWidth(Decay_Channel* dc)
     }
   }
   else {
-    dc->SetActive(-1);
+    dc->SetActiveAll(-1);
     dc->SetIWidth(0.0);
     dc->SetIDeltaWidth(0.0);
     dc->SetMax(0.0);
   }
+  auto s = Settings::GetMainSettings()["HARD_DECAYS"]["Channels"][dc->IDCode()];
   dc->SetWidth(dc->IWidth());
   dc->SetDeltaWidth(dc->IDeltaWidth());
   return true;
@@ -612,7 +585,7 @@ double Hard_Decay_Handler::BRFactor(ATOOLS::Blob* blob) const
     Particle* part=blob->OutParticle(i);
     Decay_Table* dt=p_decaymap->FindDecay(part->RefFlav());
     if (dt) {
-      brfactor*=dt->ActiveWidth()/dt->TotalWidth();
+      brfactor*=dt->ActiveWidth(0)/dt->TotalWidth();
       if (part->DecayBlob() && part->DecayBlob()->Type()==btp::Hard_Decay)
         brfactor*=BRFactor(part->DecayBlob());
     }
@@ -772,18 +745,25 @@ void Hard_Decay_Handler::AddDecayClustering(ATOOLS::Cluster_Amplitude*& ampl,
 {
   DEBUG_FUNC("blob->Id()="<<blob->Id()<<" idmother="<<ID(idmother));
   DEBUG_VAR(*blob);
-  Particle_Vector daughters;
+  Particle_Vector daughters, splitphotonproducts;
   ParticlePair_Vector photons;
+  ParticlePairPair_Vector splitphotons;
   for (size_t i(0);i<blob->GetOutParticles().size();++i) {
     Particle * p(blob->OutParticle(i));
-    if (p->Info()=='S') photons.push_back(make_pair(p,p));
-    else                daughters.push_back(p);
+    if      (p->Info()=='S') photons.push_back(make_pair(p,p));
+    else if (p->Info()=='s') splitphotonproducts.push_back(p);
+    else                     daughters.push_back(p);
   }
-  std::sort(photons.begin(),photons.end(),ParticlePairFirstEnergySort());
   msg_Debugging()<<"daughters: ";
   for (size_t i(0);i<daughters.size();++i)
     msg_Debugging()<<daughters[i]->Flav().IDName()<<" ";
-  msg_Debugging()<<" +  "<<photons.size()<<" soft photon(s)"<<std::endl;
+  msg_Debugging()<<" +  "<<photons.size()<<" soft photon(s)"
+                 <<" +  "<<splitphotonproducts.size()<<" photon splitting products"
+                 <<std::endl;
+  UnsplitPhotons(splitphotonproducts,splitphotons);
+  std::sort(photons.begin(),photons.end(),ParticlePairFirstEnergySort());
+  std::sort(splitphotons.begin(),splitphotons.end(),ParticlePairPairFirstEnergySort());
+  AssignSplitPhotons(daughters,splitphotons);
   AssignPhotons(daughters,photons);
   if (daughters.size()==2) {
     msg_Debugging()<<"1 to 2 case"<<std::endl;
@@ -822,11 +802,13 @@ void Hard_Decay_Handler::AddDecayClustering(ATOOLS::Cluster_Amplitude*& ampl,
     lij->SetK(idk);
     Cluster_Leg *d1(copy->IdLeg(idmother));
     size_t stat1(0), stat2(0);
-    d1->SetMom(RecombinedMomentum(daughters[0],photons,stat1));
+    d1->SetMom(RecombinedMomentum(daughters[0],photons,splitphotons,stat1));
     d1->SetStat(stat1);
     d1->SetFlav(daughters[0]->Flav());
-    copy->CreateLeg(RecombinedMomentum(daughters[1],photons,stat2),
+    d1->SetFromDec(true);
+    copy->CreateLeg(RecombinedMomentum(daughters[1],photons,splitphotons,stat2),
                     daughters[1]->RefFlav());
+    copy->Legs().back()->SetFromDec(true);
     size_t idnew=1<<(++imax);
     copy->Legs().back()->SetId(idnew);
     copy->Legs().back()->SetStat(stat2);
@@ -852,6 +834,10 @@ void Hard_Decay_Handler::AddDecayClustering(ATOOLS::Cluster_Amplitude*& ampl,
     std::vector<size_t> ids;
     ids.push_back(idmother);
     ids.push_back(idnew);
+    // always combine radiated (split) photons with
+    // identified primary charged decay particle
+    while (splitphotons.size())
+      AddSplitPhotonsClustering(copy, daughters, splitphotons, imax, ids);
     while (photons.size())
       AddPhotonsClustering(copy, daughters, photons, imax, ids);
     if (daughters[0]->DecayBlob())
@@ -900,9 +886,10 @@ void Hard_Decay_Handler::AddDecayClustering(ATOOLS::Cluster_Amplitude*& ampl,
     lij->SetK(idk);
     Cluster_Leg *d1(step1->IdLeg(idmother));
     size_t stat1(0),stat2(0),stat3(0);
-    d1->SetMom(RecombinedMomentum(daughters[0],photons,stat1));
+    d1->SetMom(RecombinedMomentum(daughters[0],photons,splitphotons,stat1));
     d1->SetStat(stat1);
     d1->SetFlav(daughters[0]->Flav());
+    d1->SetFromDec(true);
     // todo: 1->2 qcd shower with ew fs recoil partner
     // d1->SetK(idmother);// not that simple: w->qq' has color connection in fs
     Decay_Channel* dc(NULL);
@@ -915,13 +902,14 @@ void Hard_Decay_Handler::AddDecayClustering(ATOOLS::Cluster_Amplitude*& ampl,
     Comix1to3* amp=dynamic_cast<Comix1to3*>(dc->GetDiagrams()[0]);
     if (!amp) THROW(fatal_error, "Internal error.");
     Flavour prop_flav=amp->Prop();
-    Vec4D momd2=RecombinedMomentum(daughters[1],photons,stat2);
-    Vec4D momd3=RecombinedMomentum(daughters[2],photons,stat3);
+    Vec4D momd2=RecombinedMomentum(daughters[1],photons,splitphotons,stat2);
+    Vec4D momd3=RecombinedMomentum(daughters[2],photons,splitphotons,stat3);
     Vec4D prop_mom=momd2+momd3;
     step1->CreateLeg(prop_mom, prop_flav);
     size_t idnew1=1<<(++imax);
     step1->Legs().back()->SetId(idnew1);
     step1->Legs().back()->SetStat(0);
+    step1->Legs().back()->SetFromDec(true);
     Cluster_Amplitude::SetColours(ampl->IdLeg(idmother),
                                   step1->IdLeg(idmother),
                                   step1->Legs().back());
@@ -961,6 +949,7 @@ void Hard_Decay_Handler::AddDecayClustering(ATOOLS::Cluster_Amplitude*& ampl,
     size_t idnew2=1<<(++imax);
     step2->Legs().back()->SetId(idnew2);
     step2->Legs().back()->SetStat(stat3);
+    step2->Legs().back()->SetFromDec(true);
     Cluster_Amplitude::SetColours(step1->IdLeg(idnew1),
                                   step2->IdLeg(idnew1),
                                   step2->Legs().back());
@@ -986,6 +975,10 @@ void Hard_Decay_Handler::AddDecayClustering(ATOOLS::Cluster_Amplitude*& ampl,
     ids.push_back(idmother);
     ids.push_back(idnew1);
     ids.push_back(idnew2);
+    // always combine radiated (split) photons with
+    // identified primary charged decay particle
+    while (splitphotons.size())
+      AddSplitPhotonsClustering(step2,daughters,splitphotons,imax,ids);
     while (photons.size())
       AddPhotonsClustering(step2,daughters,photons,imax,ids);
     if (daughters[0]->DecayBlob())
@@ -1000,6 +993,176 @@ void Hard_Decay_Handler::AddDecayClustering(ATOOLS::Cluster_Amplitude*& ampl,
     PRINT_VAR(*blob);
     THROW(fatal_error, "1 -> n not implemented yet.");
   }
+}
+
+void Hard_Decay_Handler::AddSplitPhotonsClustering(Cluster_Amplitude*& ampl,
+                                                   const Particle_Vector daughters,
+                                                   ParticlePairPair_Vector& splitphotons,
+                                                   size_t& imax,
+                                                   const std::vector<size_t>& ids)
+{
+  DEBUG_FUNC(splitphotons.size()<<" split photons to be clustered");
+  // will need to construct two cluster steps
+  // 1) the (offshell) photon is radiated
+  // 2) the (offshell) photon splits into the identified pair
+  Particle * splitphoton1(splitphotons.back().first.first);
+  Particle * splitphoton2(splitphotons.back().first.second);
+  Particle * daughter(splitphotons.back().second);
+  splitphotons.pop_back();
+  size_t idmother(0),idphoton(0);
+  if      (daughter==daughters[0]) idmother=ids[0];
+  else if (daughter==daughters[1]) idmother=ids[1];
+  else if (daughter==daughters[2]) idmother=ids[2];
+  else THROW(fatal_error,"Did not find id for "+daughter->Flav().IDName());
+  // construct recombined (off-shell) photon momentum
+  Vec4D pmom(splitphoton1->Momentum()+splitphoton2->Momentum());
+  msg_Debugging()<<"Cluster recombined photon with "<<pmom
+                <<" with "<<daughter->Flav()<<" "<<ID(idmother)<<std::endl;
+
+  // construct photon splitting cluster step
+  Cluster_Amplitude* copy=ampl->InitPrev();
+  copy->CopyFrom(ampl);
+  copy->SetNLO(0);
+  copy->SetFlag(1);
+  copy->SetMS(ampl->MS());
+  Cluster_Leg *lij(ampl->IdLeg(idmother));
+  for (size_t i=0; i<ampl->Legs().size(); ++i)
+    ampl->Leg(i)->SetStat(ampl->Leg(i)->Stat()|1);
+  lij->SetStat(1|2|4);
+  size_t idk(0);
+  for (size_t i=0; i<copy->Legs().size(); ++i)
+    copy->Leg(i)->SetK(0);
+  if (lij->Col().m_i!=0 || lij->Col().m_j!=0)
+    THROW(fatal_error,"Adding QED to coloured particle.");
+  // Ad hoc QED partner, must not be another soft photon
+  size_t ampl_nout=ampl->Legs().size()-ampl->NIn();
+  if (ampl_nout==1) idk=ampl->Leg(0)->Id();
+  else {
+    size_t select(0);
+    size_t nvalid(0);
+    for (size_t i(ampl->NIn());i<ampl->Legs().size();++i) {
+      if (!(ampl->Leg(i)->Id()&idmother || i>ampl->Legs().size()-1 ||
+            ampl->Leg(i)->Flav().Kfcode()==kf_photon)) {
+        nvalid++;
+      }
+    }
+    if (nvalid==0) select=0;
+    else {
+      do {
+        select=ampl->NIn()+floor(ran->Get()*ampl_nout);
+      } while (ampl->Leg(select)->Id()&idmother ||
+          select>ampl->Legs().size()-1 ||
+          ampl->Leg(select)->Flav().Kfcode()==kf_photon);
+    }
+    msg_Debugging()<<"choose ("<<ID(ampl->Leg(select)->Id())<<") "
+      <<ampl->Leg(select)->Flav()<<std::endl;
+    idk=ampl->Leg(select)->Id();
+  }
+  if (idk==0) THROW(fatal_error,"Colour partner not found");
+  lij->SetK(idk);
+  Cluster_Leg *d1(copy->IdLeg(idmother));
+  size_t stat1(0), stat2(0);
+  d1->SetMom(RecombinedMomentum(daughter,ParticlePair_Vector(),splitphotons,stat1));
+  d1->SetStat(stat1);
+  d1->SetFlav(daughter->Flav());
+  copy->CreateLeg(pmom,Flavour(kf_photon));
+  idphoton=1<<(++imax);
+  copy->Legs().back()->SetId(idphoton);
+  copy->Legs().back()->SetStat(stat2);
+  Cluster_Amplitude::SetColours(ampl->IdLeg(idmother),
+                                copy->IdLeg(idmother),
+                                copy->Legs().back());
+  copy->SetIdNew(idphoton);
+  DEBUG_VAR(*copy);
+  // update IDs
+  Cluster_Amplitude* tmp=copy;
+  while (tmp->Next()) {
+    tmp=tmp->Next();
+    if (tmp->IdNew()&idmother) tmp->SetIdNew(tmp->IdNew()|idphoton);
+    for (size_t i=0; i<tmp->Legs().size(); ++i) {
+      if (tmp->Leg(i)->Id()&idmother) {
+        tmp->Leg(i)->SetId(tmp->Leg(i)->Id()|idphoton);
+      }
+      if (tmp->Leg(i)->K()&idmother) {
+        tmp->Leg(i)->SetK(tmp->Leg(i)->K()|idphoton);
+      }
+    }
+    DEBUG_VAR(*tmp);
+  }
+  ampl=copy;
+
+  // construct the photon splitting cluster step
+  copy=ampl->InitPrev();
+  copy->CopyFrom(ampl);
+  copy->SetNLO(0);
+  copy->SetFlag(1);
+  copy->SetMS(ampl->MS());
+  lij=ampl->IdLeg(idphoton);
+  for (size_t i=0; i<ampl->Legs().size(); ++i)
+    ampl->Leg(i)->SetStat(ampl->Leg(i)->Stat()|1);
+  lij->SetStat(1|2|4);
+  idk=0;
+  for (size_t i=0; i<copy->Legs().size(); ++i)
+    copy->Leg(i)->SetK(0);
+  if (lij->Col().m_i!=0 || lij->Col().m_j!=0)
+    THROW(fatal_error,"Adding QED to coloured particle.");
+  // Ad hoc QED partner, must not be another soft photon
+  ampl_nout=ampl->Legs().size()-ampl->NIn();
+  if (ampl_nout==1) idk=ampl->Leg(0)->Id();
+  else {
+    size_t select(0);
+    size_t nvalid(0);
+    for (size_t i(ampl->NIn());i<ampl->Legs().size();++i) {
+      if (!(ampl->Leg(i)->Id()&idmother || i>ampl->Legs().size()-1 ||
+            ampl->Leg(i)->Flav().Kfcode()==kf_photon)) {
+        nvalid++;
+      }
+    }
+    if (nvalid==0) select=0;
+    else {
+      do {
+        select=ampl->NIn()+floor(ran->Get()*ampl_nout);
+      } while (ampl->Leg(select)->Id()&idmother ||
+          select>ampl->Legs().size()-1 ||
+          ampl->Leg(select)->Flav().Kfcode()==kf_photon);
+    }
+    msg_Debugging()<<"choose ("<<ID(ampl->Leg(select)->Id())<<") "
+      <<ampl->Leg(select)->Flav()<<std::endl;
+    idk=ampl->Leg(select)->Id();
+  }
+  if (idk==0) THROW(fatal_error,"Colour partner not found");
+  lij->SetK(idk);
+  d1=copy->IdLeg(idphoton);
+  stat1=0; stat2=0;
+  // we know the splitting products are not evolved further yet
+  d1->SetMom(splitphoton1->Momentum());
+  d1->SetStat(stat1);
+  d1->SetFlav(splitphoton1->Flav());
+  copy->CreateLeg(splitphoton2->Momentum(),splitphoton2->Flav());
+  size_t idnew=1<<(++imax);
+  copy->Legs().back()->SetId(idnew);
+  copy->Legs().back()->SetStat(stat2);
+  Cluster_Amplitude::SetColours(ampl->IdLeg(idmother),
+                                copy->IdLeg(idmother),
+                                copy->Legs().back());
+  copy->SetIdNew(idnew);
+  DEBUG_VAR(*copy);
+  // update IDs
+  tmp=copy;
+  while (tmp->Next()) {
+    tmp=tmp->Next();
+    if (tmp->IdNew()&idphoton) tmp->SetIdNew(tmp->IdNew()|idnew);
+    for (size_t i=0; i<tmp->Legs().size(); ++i) {
+      if (tmp->Leg(i)->Id()&idphoton) {
+        tmp->Leg(i)->SetId(tmp->Leg(i)->Id()|idnew);
+      }
+      if (tmp->Leg(i)->K()&idphoton) {
+        tmp->Leg(i)->SetK(tmp->Leg(i)->K()|idnew);
+      }
+    }
+    DEBUG_VAR(*tmp);
+  }
+  ampl=copy;
 }
 
 void Hard_Decay_Handler::AddPhotonsClustering(Cluster_Amplitude*& ampl,
@@ -1063,7 +1226,7 @@ void Hard_Decay_Handler::AddPhotonsClustering(Cluster_Amplitude*& ampl,
   lij->SetK(idk);
   Cluster_Leg *d1(copy->IdLeg(idmother));
   size_t stat1(0), stat2(0);
-  d1->SetMom(RecombinedMomentum(daughter,photons,stat1));
+  d1->SetMom(RecombinedMomentum(daughter,photons,ParticlePairPair_Vector(),stat1));
   d1->SetStat(stat1);
   d1->SetFlav(daughter->Flav());
   copy->CreateLeg(photon->Momentum(),photon->RefFlav());
@@ -1075,6 +1238,7 @@ void Hard_Decay_Handler::AddPhotonsClustering(Cluster_Amplitude*& ampl,
                                 copy->Legs().back());
   copy->SetIdNew(idnew);
   DEBUG_VAR(*copy);
+  // update IDs
   Cluster_Amplitude* tmp=copy;
   while (tmp->Next()) {
     tmp=tmp->Next();
@@ -1092,12 +1256,78 @@ void Hard_Decay_Handler::AddPhotonsClustering(Cluster_Amplitude*& ampl,
   ampl=copy;
 }
 
+void Hard_Decay_Handler::UnsplitPhotons(const ATOOLS::Particle_Vector& spp,
+                                        ParticlePairPair_Vector& splitphotons)
+{
+  // undo the splitting of a photon, recombine particle-anti-particle pair
+  // into (off-shell) photon
+  if (spp.size()) {
+    if (spp.size()%2!=0)
+      THROW(fatal_error,"Uneven number of photon-splitting products, cannot proceed.");
+    if (spp.size()==2) {
+      splitphotons.push_back(make_pair(make_pair(spp[0],spp[1]),spp[0]));
+    }
+    else {
+      // find (particle,anti-particle)-pairs in spp,
+      // order by invariant mass, starting with the smallest
+      std::map<double,std::pair<size_t,size_t> > pairtable;
+      for (size_t i(0);i<spp.size();++i) {
+        for (size_t j(i+1);j<spp.size();++j) {
+          if (spp[i]->Flav()==spp[j]->Flav().Bar()) {
+            double m2((spp[i]->Momentum()+spp[j]->Momentum()).Mass());
+            pairtable[m2]=make_pair(i,j);
+          }
+        }
+      }
+      if (pairtable.empty()) {
+        msg_Debugging()<<"no pairs found"<<std::endl;
+      }
+      else if (pairtable.size()==1) {
+        splitphotons.push_back(make_pair(make_pair(spp[0],spp[1]),spp[0]));
+      }
+      else {
+        if (msg_LevelIsDebugging()) {
+          msg_Debugging()<<"pairs found:\n";
+          for (std::map<double,std::pair<size_t,size_t> >::const_iterator
+               it=pairtable.begin();it!=pairtable.end();++it)
+            msg_Debugging()<<it->second.first<<" "<<it->second.second<<": "
+                <<", m2="<<it->first<<std::endl;
+        }
+        std::vector<size_t> usedindices;
+        for (std::map<double,std::pair<size_t,size_t> >::const_iterator it=pairtable.begin();
+             it!=pairtable.end();++it) {
+          bool valid(true);
+          for (size_t i(0);i<usedindices.size();++i)
+            if (it->second.first==usedindices[i] ||
+                it->second.second==usedindices[i]) { valid=false; break; }
+          if (!valid) continue;
+          usedindices.push_back(it->second.first);
+          usedindices.push_back(it->second.second);
+          msg_Debugging()<<"constructing split pair: P -> "
+                        <<spp[it->second.first]->Flav()<<" "
+                        <<spp[it->second.second]->Flav()<<" ,  m2 = "
+                        <<it->first<<std::endl;
+          splitphotons.push_back(make_pair(make_pair(spp[it->second.first],
+                                                     spp[it->second.second]),
+                                           spp[it->second.first]));
+        }
+        if (2*splitphotons.size()!=spp.size()) {
+          msg_Error()<<METHOD<<"(): Found "<<splitphotons.size()<<" pairs in "
+                     <<spp.size()<<" particles."<<std::endl;
+          THROW(fatal_error,"Wrong number of pairs found.");
+        }
+      }
+    }
+  }
+}
+
 void Hard_Decay_Handler::AssignPhotons(const Particle_Vector& daughters,
                                        ParticlePair_Vector& photons)
 {
-  // for every photon, find charged particle that's closest
+  // for every photon, find charged particle that's closest (using dR)
   // ignore radiation off charged resonance for now
   if (photons.size()) {
+    // first
     Particle_Vector cdaughters;
     for (size_t i(0);i<daughters.size();++i)
       if (daughters[i]->Flav().Charge()) cdaughters.push_back(daughters[i]);
@@ -1136,11 +1366,68 @@ void Hard_Decay_Handler::AssignPhotons(const Particle_Vector& daughters,
   }
 }
 
+void Hard_Decay_Handler::AssignSplitPhotons(const Particle_Vector& daughters,
+                                            ParticlePairPair_Vector& splitphotons)
+{
+  // for every split photon, find charged particle that's closest (using dR)
+  // ignore radiation off charged resonance for now
+  if (splitphotons.size()) {
+    // first
+    Particle_Vector cdaughters;
+    for (size_t i(0);i<daughters.size();++i)
+      if (daughters[i]->Flav().Charge()) cdaughters.push_back(daughters[i]);
+    if (cdaughters.size()==1) {
+      for (size_t i(0);i<splitphotons.size();++i)
+        splitphotons[i].second=cdaughters[0];
+    }
+    else {
+      Vec4D cmom(0.,0.,0.,0.);
+      Vec4D_Vector cmoms;
+      for (size_t i(0);i<cdaughters.size();++i) {
+        cmoms.push_back(cdaughters[i]->Momentum());
+        cmom+=cmoms[i];
+      }
+      Poincare ccms(cmom);
+      for (size_t i(0);i<cdaughters.size();++i) ccms.Boost(cmoms[i]);
+      for (size_t i(0);i<splitphotons.size();++i){
+        Vec4D pmom(splitphotons[i].first.first->Momentum()
+                   +splitphotons[i].first.second->Momentum());
+        ccms.Boost(pmom);
+        size_t id(0);
+        double dR(pmom.DR(cmoms[0]));
+        for (size_t j(1);j<cmoms.size();++j) {
+          double dRj(pmom.DR(cmoms[j]));
+          if (dRj<dR) { id=j; dR=dRj; }
+        }
+        splitphotons[i].second=cdaughters[id];
+      }
+    }
+    for (size_t i(0);i<splitphotons.size();++i) {
+      if (splitphotons[i].first.first==splitphotons[i].second ||
+          splitphotons[i].first.second==splitphotons[i].second)
+        THROW(fatal_error,"Split photon has not been assigned.");
+      msg_Debugging()<<splitphotons[i].first.first->Flav()<<" "
+                     <<splitphotons[i].first.first->Momentum()<<" and "
+                     <<splitphotons[i].first.second->Flav()<<" "
+                     <<splitphotons[i].first.second->Momentum()
+                     <<" assigned to "<<splitphotons[i].second->Flav()<<std::endl;
+    }
+  }
+}
+
 Vec4D Hard_Decay_Handler::RecombinedMomentum(const Particle * daughter,
                                              const ParticlePair_Vector& photons,
+                                             const ParticlePairPair_Vector& splitphotons,
                                              size_t& stat)
 {
   Vec4D mom(0.,0.,0.,0.);
+  for (size_t i(0);i<splitphotons.size();++i) {
+    if (splitphotons[i].second==daughter) {
+      mom+=splitphotons[i].first.first->Momentum()
+           +splitphotons[i].first.second->Momentum();
+      stat|=2|4;
+    }
+  }
   for (size_t i(0);i<photons.size();++i) {
     if (photons[i].second==daughter) {
       mom+=photons[i].first->Momentum();
@@ -1189,7 +1476,7 @@ void Hard_Decay_Handler::WriteDecayTables()
     ostr<<"# Decay table for "<<dmit->first<<endl;
     ostr<<"# IDCode                   \tWidth     \tDeltaWidth \tMaximum"<<endl<<endl;
     Decay_Table::iterator dtit;
-    for (dtit=dmit->second[0]->begin(); dtit!=dmit->second[0]->end(); ++dtit) {
+    for (dtit=dmit->second->begin(); dtit!=dmit->second->end(); ++dtit) {
       ostr<<setw(25)<<left<<(*dtit)->IDCode()<<"\t"
           <<setw(12)<<left<<(*dtit)->IWidth()<<"\t"
           <<setw(12)<<left<<(*dtit)->IDeltaWidth()<<"\t"

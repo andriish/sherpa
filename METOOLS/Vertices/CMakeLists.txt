@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -23,3 +24,22 @@ target_include_directories(METoolsVertices PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS METoolsVertices DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(METoolsVertices        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME METoolsVertices SOVERSION 0.0.0)
 set_target_properties(METoolsVertices        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Vertices_SOURCES FFV_DLC.C
+                     VVV_DLC.C
+                     SSS_LC.C
+                     SSV_LC.C
+                     SFF_LC.C
+                     SVV_LC.C
+                     FFV_LC.C
+                     VVV_LC.C
+                     VVP_LC.C
+                     SSSS_LC.C
+                     SSVV_LC.C
+                     VVVV_LC.C)
+
+sherpa_create_git_info(Vertices)
+ 
+add_library(METoolsVertices SHARED ${Vertices_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(METoolsVertices METoolsVertices)
+>>>>>>> upstream/master

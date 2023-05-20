@@ -35,6 +35,7 @@ PS_Channel::PS_Channel(const size_t &_nin,const size_t &_nout,
   m_nin=_nin;
   m_nout=_nout;
   m_p.resize(1<<(m_n+1));
+  m_s.resize(1<<(m_n+1));
   p_ms = new double[m_n];
   for (size_t i(0);i<m_n;++i) {
     p_ms[i]=sqr(_fl[i].Mass());
@@ -55,6 +56,7 @@ PS_Channel::PS_Channel(const size_t &_nin,const size_t &_nout,
   m_aexp = s["AEXP"].Get<double>();
   m_thexp = s["THEXP"].Get<double>();
   m_mfac = s["MFAC"].Get<double>();
+  m_speak = s["SPEAK"].Get<double>();
   if (!(m_vmode&8)) m_nvints=Max(10,Min(m_nvints,500));
   if (m_vsopt>0) (m_vmode&=~1)|=2;
   m_nr=3*m_nout-4;
@@ -81,11 +83,12 @@ void PS_Channel::RegisterDefaults() const
   s["VINTS"].SetDefault(8);       // vegas intervals
   s["TEXP"].SetDefault(0.9);      // t-channel exp
   s["STEXP"].SetDefault(1.0e-3);  // t-channel sub exp
-  s["SEXP"].SetDefault(0.75);     // s-channel exp
+  s["SEXP"].SetDefault(1.);     // s-channel exp
   s["SRBASE"].SetDefault(1.05);   // s-channel exp scale
   s["AEXP"].SetDefault(0.9);      // aniso s-channel exp
   s["THEXP"].SetDefault(1.5);     // threshold exponent
   s["MFAC"].SetDefault(1.0);      // m_{min} factor
+  s["SPEAK"].SetDefault(1.0);      // Peak for the regulated 1/s distribution
 }
 
 const std::vector<int> &PS_Channel::GetCId(const size_t &id)
@@ -210,9 +213,9 @@ double PS_Channel::PropMomenta(const PS_Current *cur,const size_t &id,
       return CE.MassivePropMomenta(cur->Mass(),cur->Width(),smin,smax,*cr);
     if (cur->Mass()>s_pmmin) 
       return CE.ThresholdMomenta(m_thexp,m_mfac*cur->Mass(),smin,smax,*cr);
-    return CE.MasslessPropMomenta(sexp,smin,smax,*cr);
+    return CE.MasslessPropMomenta(sexp,smin,smax,m_speak,*cr);
   }
-  return CE.MasslessPropMomenta(sexp,smin,smax,*cr);
+  return CE.MasslessPropMomenta(sexp,smin,smax,m_speak,*cr);
 }
 
 double PS_Channel::PropWeight(const PS_Current *cur,const size_t &id,
@@ -229,9 +232,9 @@ double PS_Channel::PropWeight(const PS_Current *cur,const size_t &id,
       wgt=CE.MassivePropWeight(cur->Mass(),cur->Width(),smin,smax,s,rn);
     else if (cur->Mass()>s_pmmin) 
       wgt=CE.ThresholdWeight(m_thexp,m_mfac*cur->Mass(),smin,smax,s,rn);
-    else wgt=CE.MasslessPropWeight(sexp,smin,smax,s,rn);
+    else wgt=CE.MasslessPropWeight(sexp,smin,smax,s,m_speak,rn);
   }
-  else wgt=CE.MasslessPropWeight(sexp,smin,smax,s,rn);
+  else wgt=CE.MasslessPropWeight(sexp,smin,smax,s,m_speak,rn);
   }
   if (m_vmode&3) {
     Vegas *cvgs(GetPVegas(cur,id));
@@ -270,8 +273,7 @@ void PS_Channel::SingleTChannelBounds
  const ATOOLS::Vec4D &pa,const ATOOLS::Vec4D &pb,
  const double &s1,const double &s2,const int mode)
 {
-  double ctmin=p_cuts->cosmin[a][j];
-  double ctmax=p_cuts->cosmax[a][j];
+  double ctmin=-1., ctmax=1.;
 #ifdef DEBUG__BG
   msg_Debugging()<<"    set t_{"<<a<<","<<j<<"} ctmin = "
 		 <<ctmin<<", ctmax = "<<ctmax<<" ("<<mode<<")\n";
@@ -322,10 +324,11 @@ void PS_Channel::TChannelMomenta
 
 double PS_Channel::TChannelWeight
 (PS_Current *cur,NLO_subevt *const dip,const size_t &id,const size_t &aid,
- const Vec4D &pa,const Vec4D &pb,Vec4D &p1,Vec4D &p2)
+ const Vec4D &pa,const Vec4D &pb,Vec4D &p1,Vec4D &p2,
+ const double &s1,const double &s2)
 {
   double ctmin(-1.0), ctmax(1.0), rns[2];
-  TChannelBounds(aid,id,ctmin,ctmax,pa,pb,p1.Abs2(),p2.Abs2());
+  TChannelBounds(aid,id,ctmin,ctmax,pa,pb,s1,s2);
   double wgt(CE.TChannelWeight(pa,pb,p1,p2,cur->Mass(),
 			       dip?m_stexp:m_texp,ctmax,ctmin,rns[0],rns[1]));
   if (m_vmode&3) {
@@ -651,8 +654,17 @@ void PS_Channel::GeneratePoint
   m_vgs.clear();
   m_rns.clear();
   if (!GeneratePoint(v)) return;
+#ifdef DEBUG__BG
+  msg_Debugging()<<"  p[0]="<<p[0]<<"\n";
+  msg_Debugging()<<"  p[1]="<<p[1]<<"\n";
+#endif
   Vec4D sum(-p[0]-p[1]);
-  for (size_t i(2);i<m_n;++i) sum+=p[i]=m_p[1<<i];
+  for (size_t i(2);i<m_n;++i) {
+    sum+=p[i]=m_p[1<<i];
+#ifdef DEBUG__BG
+    msg_Debugging()<<"  p["<<i<<"]="<<p[i]<<"\n";
+#endif
+  }
   if (!IsEqual(sum,Vec4D(),sqrt(Accu()))) msg_Error()
     <<METHOD<<"(): Four momentum not conserved. Diff "<<sum<<std::endl;
 #ifdef DEBUG__BG
@@ -669,21 +681,24 @@ double PS_Channel::GenerateWeight
   if (((cid&m_lid)==m_lid)^((cid&m_rid)==m_rid)) {
     size_t pid(aid-(m_rid+bid));
     aid=(1<<m_n)-1-aid;
-    if (IdCount(pid)>1) m_p[pid]=-m_p[aid]-m_p[m_rid]-m_p[bid];
+    if (IdCount(pid)>1) {
+      m_p[pid]=-m_p[aid]-m_p[m_rid]-m_p[bid];
+      if (m_s[pid]==0.0) m_s[pid]=m_p[pid].Abs2();
+    }
     double se(SCut(bid)), sp(SCut(pid));
     double rtsmax((m_p[aid]+m_p[m_rid]).Mass());
     if (CIdCount(bid)>1) {
       double smin(se), smax(sqr(rtsmax-sqrt(sp)));
-      wgt*=PropWeight(jb,bid,smin,smax,se=m_p[bid].Abs2());
+      wgt*=PropWeight(jb,bid,smin,smax,se=m_s[bid]);
     }
     if (CIdCount(pid)>1) {
       double smin(sp), smax(sqr(rtsmax-sqrt(se)));
       wgt*=PropWeight((PS_Current*)jc->SCC(),pid,
-		      smin,smax,sp=m_p[pid].Abs2());
+		      smin,smax,sp=m_s[pid]);
     }
     wgt*=TChannelWeight(jc,jc->Dip()?jc->Dip():v->Dip(),
 			bid,aid,-m_p[aid],-m_p[m_rid],
-			m_p[bid],m_p[pid]);
+			m_p[bid],m_p[pid],m_s[bid],m_s[pid]);
     nr+=2;
 #ifdef DEBUG__BG
     msg_Debugging()<<"    t "<<nr<<": {"<<ID(ja->CId())
@@ -700,11 +715,11 @@ double PS_Channel::GenerateWeight
     double rts(m_p[cid].Mass()), sl(SCut(lid)), sr(SCut(rid));
     if (CIdCount(lid)>1) {
       double smin(sl), smax(sqr(rts-sqrt(sr)));
-      wgt*=PropWeight(ja,lid,smin,smax,sl=m_p[lid].Abs2());
+      wgt*=PropWeight(ja,lid,smin,smax,sl=m_s[lid]);
     }
     if (CIdCount(rid)>1) {
       double smin(sr), smax(sqr(rts-sqrt(sl)));
-      wgt*=PropWeight(jb,rid,smin,smax,sr=m_p[rid].Abs2());
+      wgt*=PropWeight(jb,rid,smin,smax,sr=m_s[rid]);
     }
     wgt*=SChannelWeight(jc,(PS_Vertex*)v,m_p[lid],m_p[lid|rid]-m_p[lid]);
     nr+=2;
@@ -841,6 +856,7 @@ void PS_Channel::GenerateWeight(ATOOLS::Vec4D *p,PHASIC::Cut_Data *cuts)
     msg_Debugging()<<"  p_"<<i<<" = "<<m_p[1<<i]<<"\n";
 #endif
   }
+  m_s=std::vector<double>(1<<(m_n+1),0.);
   for (size_t n(2);n<p_cur->size();++n)
     for (size_t i(0);i<(*p_cur)[n].size();++i) {
       Current *cur((*p_cur)[n][i]);
@@ -849,10 +865,18 @@ void PS_Channel::GenerateWeight(ATOOLS::Vec4D *p,PHASIC::Cut_Data *cuts)
       m_p[(1<<m_n)-1-cur->CId()]=
 	-(m_p[cur->CId()]=m_p[cur->In().front()->J(0)->CId()]
 	  +m_p[cur->In().front()->J(1)->CId()]);
+      m_s[(1<<m_n)-1-cur->CId()]=m_s[cur->CId()]=m_p[cur->CId()].Abs2();
+      if (IdCount(cur->CId())==2 &&
+	  cur->In().front()->J(0)->Flav().Mass()==0. &&
+          cur->In().front()->J(1)->Flav().Mass()==0.)
+        m_s[(1<<m_n)-1-cur->CId()]=m_s[cur->CId()]=
+            2.*m_p[cur->In().front()->J(0)->CId()].SmallMLDP
+            (m_p[cur->In().front()->J(1)->CId()]);
 #ifdef DEBUG__BG
 	msg_Debugging()<<"  -p_"<<ID((1<<m_n)-1-cur->CId())
 		       <<" = p_"<<ID(cur->CId())
-		       <<" = "<<m_p[cur->CId()]<<"\n";
+		       <<" = "<<m_p[cur->CId()]
+                       <<", s = "<<m_s[cur->CId()]<<"\n";
 #endif
     }
   for (size_t i(0);i<m_n;++i) m_p[1<<i]=i<2?-p[i]:p[i];

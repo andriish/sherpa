@@ -36,8 +36,8 @@ using namespace std;
 
 Single_Virtual_Correction::Single_Virtual_Correction() :
   m_cmur(2,0.), m_wass(4,0.),
-  m_stype(sbt::none),
-  m_itype(cs_itype::none), m_iresult(0.0),
+  m_stype(sbt::none), m_user_stype(sbt::none),
+  m_user_imode(cs_itype::none), m_iresult(0.0),
   p_psgen(NULL), p_partner(this), p_LO_process(NULL),
   p_kernel_qcd(NULL), p_kernel_ew(NULL),
   p_kpterms_qcd(NULL), p_kpterms_ew(NULL), p_loopme(NULL), p_reqborn(NULL),
@@ -56,17 +56,16 @@ Single_Virtual_Correction::Single_Virtual_Correction() :
   Settings& s = Settings::GetMainSettings();
   Scoped_Settings amegicsettings{ s["AMEGIC"] };
   p_fsmc=NULL;
-  m_checkborn = amegicsettings["CHECK_BORN"].Get<size_t>();
-  m_checkpoles = ToType<size_t>(rpa->gen.Variable("CHECK_POLES"));
-  m_checkfinite = amegicsettings["CHECK_FINITE"].Get<size_t>();
+  m_checkborn = amegicsettings["CHECK_BORN"].Get<bool>();
+  m_checkpoles = amegicsettings["CHECK_POLES"].Get<bool>();
+  m_checkfinite = amegicsettings["CHECK_FINITE"].Get<bool>();
   m_checkthreshold = amegicsettings["CHECK_THRESHOLD"].Get<double>();
   m_force_init = amegicsettings["LOOP_ME_INIT"].Get<size_t>();
   m_sccmur = s["USR_WGT_MODE"].Get<bool>();
-  m_murcoeffvirt =
-    amegicsettings["NLO_MUR_COEFFICIENT_FROM_VIRTUAL"].Get<size_t>();
+  m_murcoeffvirt = s["NLO_MUR_COEFFICIENT_FROM_VIRTUAL"].Get<bool>();
   m_user_bvimode = amegicsettings["NLO_BVI_MODE"].Get<size_t>();
-  m_itype = s["NLO_IMODE"].Get<cs_itype::type>();
-  m_ipart = amegicsettings["NLO_IPART"].Get<sbt::subtype>();
+  m_user_imode = s["NLO_IMODE"].Get<cs_itype::type>();
+  m_user_stype = s["NLO_SUBTRACTION_MODE"].Get<sbt::subtype>();
   m_epsmode = amegicsettings["NLO_EPS_MODE"].Get<size_t>();
   m_drmode = amegicsettings["NLO_DR_MODE"].Get<size_t>();
   m_checkloopmap = amegicsettings["CHECK_LOOP_MAP"].Get<size_t>();
@@ -264,7 +263,7 @@ int Single_Virtual_Correction::InitAmplitude(Amegic_Model * model,Topology* top,
   if (m_stype==sbt::none) return 0;
 
   // reduce subtraction type, if only IKP_QCD or IKP_QED is requested
-  m_stype&=m_ipart;
+  m_stype&=m_user_stype;
   msg_Tracking()<<"Subtraction type for "<<m_name<<": "<<m_stype<<std::endl;
 
   // initialise KP-Terms and get Kernels for I-Term
@@ -272,7 +271,7 @@ int Single_Virtual_Correction::InitAmplitude(Amegic_Model * model,Topology* top,
     p_kpterms_qcd = new KP_Terms(this,
                                  sbt::qcd,
                                  p_LO_process->PartonListQCD());
-    p_kpterms_qcd->SetIType(m_itype);
+    p_kpterms_qcd->SetIType(m_user_imode);
     p_kpterms_qcd->SetCoupling(p_LO_process->CouplingMap());
     p_kernel_qcd=p_kpterms_qcd->Kernel();
   }
@@ -280,7 +279,7 @@ int Single_Virtual_Correction::InitAmplitude(Amegic_Model * model,Topology* top,
     p_kpterms_ew = new KP_Terms(this,
                                 sbt::qed,
                                 p_LO_process->PartonListQED());
-    p_kpterms_ew->SetIType(m_itype);
+    p_kpterms_ew->SetIType(m_user_imode);
     p_kpterms_ew->SetCoupling(p_LO_process->CouplingMap());
     p_kernel_ew=p_kpterms_ew->Kernel();
   }
@@ -377,10 +376,10 @@ int Single_Virtual_Correction::InitAmplitude(Amegic_Model * model,Topology* top,
   if (m_pinfo.m_fi.m_nlotype&nlo_type::born)
     m_mewgtinfo.m_type|=mewgttype::B;
   if (m_pinfo.m_fi.m_nlotype&nlo_type::loop ||
-      (m_pinfo.m_fi.m_nlotype&nlo_type::vsub && m_itype&cs_itype::I))
+      (m_pinfo.m_fi.m_nlotype&nlo_type::vsub && m_user_imode&cs_itype::I))
     m_mewgtinfo.m_type|=mewgttype::VI;
-  if (m_pinfo.m_fi.m_nlotype&nlo_type::vsub && (m_itype&cs_itype::K ||
-                                                m_itype&cs_itype::P))
+  if (m_pinfo.m_fi.m_nlotype&nlo_type::vsub && (m_user_imode&cs_itype::K ||
+                                                m_user_imode&cs_itype::P))
     m_mewgtinfo.m_type|=mewgttype::KP;
   Minimize();
   if (p_partner==this && (Result()>0. || Result()<0.)) SetUpIntegrator();
@@ -653,7 +652,7 @@ double Single_Virtual_Correction::Calc_V(const ATOOLS::Vec4D_Vector &mom,
   // virtual me2 is returning local nlo kfactor to born -> needs coupling
   if (p_loopme->Mode()==0) {
     res = m_lastb*cplfac*p_loopme->ME_Finite();
-    if (m_murcoeffvirt) {
+    if (m_murcoeffvirt && p_loopme->ProvidesPoles()) {
       if (m_sccmur) {
         m_cmur[0]+=(p_loopme->ME_E1()+bornorderqcd*beta0qcd)*m_lastb*cplfac;
         m_cmur[1]+=p_loopme->ME_E2()*m_lastb*cplfac;
@@ -667,7 +666,7 @@ double Single_Virtual_Correction::Calc_V(const ATOOLS::Vec4D_Vector &mom,
   // virtual me2 is returning full Re(M_B M_V^*)
   else if (p_loopme->Mode()==1) {
     res = cplfac*p_loopme->ME_Finite();
-    if (m_murcoeffvirt) {
+    if (m_murcoeffvirt && p_loopme->ProvidesPoles()) {
       if (m_sccmur) {
         m_cmur[0]+=(p_loopme->ME_E1()+bornorderqcd*beta0qcd)*cplfac;
         m_cmur[1]+=p_loopme->ME_E2()*cplfac;
@@ -712,7 +711,7 @@ double Single_Virtual_Correction::Calc_I(const ATOOLS::Vec4D_Vector &mom)
 {
   DEBUG_FUNC("mode="<<(p_loopme?p_loopme->Mode():0));
   if (p_loopme && p_loopme->Mode()&2) return 0.;
-  if (!(m_itype&cs_itype::I)) return 0.;
+  if (!(m_user_imode&cs_itype::I)) return 0.;
   m_finite=m_singlepole=m_doublepole=0.;
   if (m_stype&sbt::qcd) Calc_I(sbt::qcd,p_LO_process->PartonListQCD(),
                                p_kernel_qcd,p_kpterms_qcd,mom,m_dsijqcd);
@@ -813,7 +812,7 @@ double Single_Virtual_Correction::Calc_I(const ATOOLS::sbt::subtype st,
 
 void Single_Virtual_Correction::Calc_KP(const ATOOLS::Vec4D_Vector &mom)
 {
-  if (!((m_itype&cs_itype::K) || (m_itype&cs_itype::P))) return;
+  if (!((m_user_imode&cs_itype::K) || (m_user_imode&cs_itype::P))) return;
   if (!p_LO_process->HasInitialStateEmitter()) return;
   DEBUG_FUNC("");
   m_x0=1.,m_x1=1.,m_eta0=1.,m_eta1=1.;
@@ -880,7 +879,7 @@ double Single_Virtual_Correction::Get_KPTerms(PDF_Base *pdfa, PDF_Base *pdfb,
                                               const ATOOLS::Flavour& fl1,
                                               const double& sf)
 {
-  if (!((m_itype&cs_itype::K) || (m_itype&cs_itype::P))) return 0.;
+  if (!((m_user_imode&cs_itype::K) || (m_user_imode&cs_itype::P))) return 0.;
   if (!p_LO_process->HasInitialStateEmitter()) return 0.;
   DEBUG_FUNC("");
   if (m_stype==sbt::none || !(m_pinfo.m_fi.m_nlotype&nlo_type::vsub))

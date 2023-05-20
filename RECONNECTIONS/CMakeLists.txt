@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -29,3 +30,6 @@ target_include_directories(Reconnections PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS Reconnections DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(Reconnections        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME Reconnections SOVERSION 0.0.0)
 set_target_properties(Reconnections        PROPERTIES DEFINE_SYMBOL "")
+=======
+add_subdirectory(Main)
+>>>>>>> upstream/master

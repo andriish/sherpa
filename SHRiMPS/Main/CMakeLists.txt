@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -25,3 +26,19 @@ target_include_directories(ShrimpsMain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS ShrimpsMain DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(ShrimpsMain        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME ShrimpsMain SOVERSION 0.0.0)
 set_target_properties(ShrimpsMain        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES Shrimps.C
+                 Cluster_Algorithm.C
+                 Soft_Jet_Criterion.C
+                 Hadron_Init.C)
+
+set(Main_HEADERS Shrimps.H
+                 Cluster_Algorithm.H
+                 Soft_Jet_Criterion.H
+                 Hadron_Init.H)
+
+sherpa_create_git_info(Main)
+ 
+add_library(ShrimpsMain SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(ShrimpsMain ShrimpsMain)
+>>>>>>> upstream/master

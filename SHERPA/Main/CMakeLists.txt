@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -26,3 +27,13 @@ target_include_directories(SherpaMain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS SherpaMain DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaMain        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaMain SOVERSION 0.0.0)
 set_target_properties(SherpaMain        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES Sherpa.C
+                 Filter.C)
+set(Main_HEADERS Sherpa.H
+                 Filter.H)
+sherpa_create_git_info(Main)
+ 
+add_library(SherpaMain SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(SherpaMain SherpaMain)
+>>>>>>> upstream/master

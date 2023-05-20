@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,15 @@ target_include_directories(PhasicEnhance PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS PhasicEnhance DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(PhasicEnhance        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME PhasicEnhance SOVERSION 0.0.0)
 set_target_properties(PhasicEnhance        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Enhance_SOURCES Enhance_Observable_Base.C
+                    Variable_Enhance_Observable.C
+                    Fastjet_Enhance_Observable.C)
+
+set(Enhance_HEADERS Enhance_Observable_Base.H)
+
+sherpa_create_git_info(Enhance)
+ 
+add_library(PhasicEnhance SHARED ${Enhance_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(PhasicEnhance PhasicEnhance)
+>>>>>>> upstream/master

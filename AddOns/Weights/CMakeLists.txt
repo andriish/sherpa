@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -23,3 +24,10 @@ target_include_directories(SherpaWeights PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS SherpaWeights DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaWeights        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaWeights SOVERSION 0.0.0)
 set_target_properties(SherpaWeights        PROPERTIES DEFINE_SYMBOL "")
+=======
+ 
+set(Weights_SOURCES  Output_Weights.C)
+sherpa_create_git_info(Weights)
+add_library(SherpaWeights SHARED ${Weights_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C)
+sherpa_handle_shared_library(SherpaWeights SherpaWeights)
+>>>>>>> upstream/master

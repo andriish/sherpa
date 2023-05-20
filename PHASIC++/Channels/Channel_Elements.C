@@ -50,7 +50,7 @@ double Channel_Elements::MasslessPropWeight
     msg_Error()<<METHOD<<"(): Value out of bounds: "
 	       <<smin<<" .. " <<smax<<" vs. "<<s<< std::endl;
   }
-  double w(PeakedWeight(0.,sexp,smin,smax,s,1,ran)/pow(s,-sexp));
+  double w(PeakedWeight(1.,sexp,smin,smax,s,1,ran)/pow(s,-sexp));
   if (IsBad(w)) msg_Error()<<METHOD<<"(): Weight is "<<w<<std::endl;
   return 1./w;
 }
@@ -58,7 +58,27 @@ double Channel_Elements::MasslessPropWeight
 double Channel_Elements::MasslessPropMomenta
 (double sexp,double smin,double smax, double ran)
 {
-  double s(PeakedDist(0.,sexp,smin,smax,1,ran));
+  double s(PeakedDist(1.,sexp,smin,smax,1,ran));
+  if (IsBad(s)) msg_Error()<<METHOD<<"(): Value is "<<s<<std::endl;
+  return s;
+}
+
+double Channel_Elements::MasslessPropWeight
+    (double sexp,double smin,double smax,const double s, double speak,double &ran)
+{
+  if (sexp != 1. && (s<smin || s>smax)) {
+    msg_Error()<<METHOD<<"(): Value out of bounds: "
+                <<smin<<" .. " <<smax<<" vs. "<<s<< std::endl;
+  }
+  double w(PeakedWeight(!IsZero(smin)?0.:speak,sexp,smin,smax,s,1,ran)/pow(s,-sexp));
+  if (IsBad(w)) msg_Error()<<METHOD<<"(): Weight is "<<w<<std::endl;
+  return 1./w;
+}
+
+double Channel_Elements::MasslessPropMomenta
+    (double sexp,double smin,double smax,double speak,double ran)
+{
+  double s(PeakedDist(!IsZero(smin)?0.:speak,sexp,smin,smax,1,ran));
   if (IsBad(s)) msg_Error()<<METHOD<<"(): Value is "<<s<<std::endl;
   return s;
 }
@@ -165,15 +185,15 @@ void Channel_Elements::TChannelMomenta
   double s1in(p1in.Abs2()), s2in(p2in.Abs2());
   double e1in((s+s1in-s2in)/2./rs), m1in(sqrt(e1in*e1in-s1in));
   double e1out((s+s1out-s2out)/2./rs), m1out(sqrt(e1out*e1out-s1out));
-  double a=(mt*mt-s1in-s1out+2.*e1in*e1out)/(2.*m1in*m1out);
-  if (a<=1.0+1.0e-6) a=1.0+1.0e-6;
+  double a=1.+1.e-6;
+  if (mt>0.) a=(mt*mt-s1in-s1out+2.*e1in*e1out)/(2.*m1in*m1out);
   double aminct(PeakedDist(0.,ctexp,a-ctmax,a-ctmin,1,ran1));
   double ct(a-aminct), st(sqrt(1.-ct*ct));
   double phi(2.*M_PI*ran2);
-  p1out=Vec4D(e1out,m1out*Vec3D(st*cos(phi),st*sin(phi),ct)); 
+  p1out=Vec4D(e1out,m1out*Vec3D(st*cos(phi),st*sin(phi),ct));
   Poincare cms(pin);
   cms.Boost(p1in);
-  Poincare zax(p1in,Vec4D::ZVEC);
+  Poincare zax(p1in,p1in[3]<0?-Vec4D::ZVEC:Vec4D::ZVEC);
   zax.RotateBack(p1out);
   cms.BoostBack(p1out);
   p2out=pin-p1out;
@@ -189,22 +209,21 @@ double Channel_Elements::TChannelWeight
   double s1out(p1out.Abs2()), s2out(p2out.Abs2());
   double e1in((s+s1in-s2in)/2./rs), m1in(sqrt(e1in*e1in-s1in));
   double e1out((s+s1out-s2out)/2./rs), m1out(sqrt(e1out*e1out-s1out));
-  double a=(mt*mt-s1in-s1out+2.*e1in*e1out)/(2.*m1in*m1out);
-  if (a<=1.0+1.0e-6) a=1.0+1.0e-6;
+  double a=1.+1.e-6;
+  if (mt>0) a=(mt*mt-s1in-s1out+2.*e1in*e1out)/(2.*m1in*m1out);
   Poincare cms(pin);
   cms.Boost(p1inh);
-  Poincare zax(p1inh,Vec4D::ZVEC);
+  Poincare zax(p1inh,p1inh[3]<0?-Vec4D::ZVEC:Vec4D::ZVEC);
   cms.Boost(p1outh);
   zax.Rotate(p1outh);
   double pa1(pow(a-ctmax,1.-ctexp));
   double ct(p1outh[3]/p1outh.PSpat());
   if (ct<ctmin || ct>ctmax) {
-    msg_Error()<<METHOD<<"(): Error in momentum mapping."<<std::endl;
+    msg_Error()<<METHOD<<"(): \\cos\\theta range violation: "
+	       <<ctmin<<" < "<<ct<<" < "<<ctmax<<std::endl;
     ran1=ran2=-1.;
     return 0.;
   }
-  ran1=(pow(a-ct,1.-ctexp)-pa1);
-  ran1/=(pow(a-ctmin,1.-ctexp)-pa1);
   ran2=asin(p1outh[2]/p1outh.PPerp())/(2.*M_PI);
   if (p1outh[1]<0.) ran2=.5-ran2;
   if (ran2<0.) ran2+=1.;
@@ -727,7 +746,7 @@ double Channel_Elements::GenerateYForward(
   ymin = ATOOLS::Max(yinfo[0], ymin);
   ymax = ATOOLS::Min(yinfo[1], ymax);
   double ypeak = ymax - xinfo[3];
-  if (yexponent>=1. && ATOOLS::IsEqual(ypeak, ymax)) {
+  if (yexponent>=0. && ATOOLS::IsEqual(ypeak, ymax)) {
     if (ypeak > 0)
       ypeak *= 1.00000001;
     if (ypeak < 0)
@@ -769,7 +788,7 @@ double Channel_Elements::WeightYForward(const double yexponent,
   if (yinfo[2] < ymin || yinfo[2] > ymax)
     return 0.0;
   double ypeak = ymax - xinfo[3];
-  if (yexponent>=1. && ATOOLS::IsEqual(ypeak, ymax)) {
+  if (yexponent>=0. && ATOOLS::IsEqual(ypeak, ymax)) {
     if (ypeak > 0)
       ypeak *= 1.00000001;
     if (ypeak < 0)
@@ -800,7 +819,7 @@ double Channel_Elements::GenerateYBackward(
   ymin = ATOOLS::Max(yinfo[0], ymin);
   ymax = ATOOLS::Min(yinfo[1], ymax);
   double ypeak = -ymin - xinfo[2];
-  if (yexponent>=1. && ATOOLS::IsEqual(ypeak, -ymin)) {
+  if (yexponent>=0. && ATOOLS::IsEqual(ypeak, -ymin)) {
     if (ypeak > 0)
       ypeak *= 1.00000001;
     if (ypeak < 0)
@@ -843,7 +862,7 @@ double Channel_Elements::WeightYBackward(const double yexponent,
   if (yinfo[2] < ymin || yinfo[2] > ymax)
     return 0.0;
   double ypeak = -ymin - xinfo[2];
-  if (yexponent>=1. && ATOOLS::IsEqual(ypeak, -ymin)) {
+  if (yexponent>=0. && ATOOLS::IsEqual(ypeak, -ymin)) {
     if (ypeak > 0)
       ypeak *= 1.00000001;
     if (ypeak < 0)

@@ -53,13 +53,14 @@ namespace COMIX {
     PHASIC::Cut_Data *p_cuts;
 
     ATOOLS::Vec4D_Vector m_p;
+    std::vector<double> m_s;
 
     Double_Matrix m_rns;
     Vegas_Vector  m_vgs;
 
     size_t m_n, m_nr, m_num, m_lid, m_rid;
     double m_texp, m_stexp, m_sexp, m_thexp, m_mfac;
-    double m_aexp, m_srbase;
+    double m_aexp, m_srbase, m_speak;
 
     int m_bmode, m_omode, m_tmode, m_vmode, m_zmode, m_czmode;
     int m_nvints, m_vsopt, m_nopt;
@@ -99,7 +100,8 @@ namespace COMIX {
     double TChannelWeight(PS_Current *cur,ATOOLS::NLO_subevt *const dip,
 			  const size_t &id,const size_t &aid,
 			  const ATOOLS::Vec4D &pa,const ATOOLS::Vec4D &pb,
-			  ATOOLS::Vec4D &p1,ATOOLS::Vec4D &p2);
+			  ATOOLS::Vec4D &p1,ATOOLS::Vec4D &p2,
+			  const double &s1,const double &s2);
 
     void SChannelBounds(const size_t &id,const size_t &lid,
 			double &ctmin,double &ctmax);

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,21 @@ target_include_directories(DireTools PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS DireTools DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(DireTools        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME DireTools SOVERSION 0.0.0)
 set_target_properties(DireTools        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Tools_SOURCES Color.C
+                  Parton.C
+                  Splitting.C
+                  Amplitude.C)
+
+set(Tools_HEADERS Color.H
+                  Parton.H
+                  Weight.H
+                  Splitting.H
+                  Kernel_Key.H
+                  Amplitude.H)
+
+sherpa_create_git_info(Tools)
+ 
+add_library(DireTools SHARED ${Tools_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(DireTools DireTools)
+>>>>>>> upstream/master

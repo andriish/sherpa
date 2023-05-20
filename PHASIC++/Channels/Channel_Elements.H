@@ -53,8 +53,10 @@ namespace PHASIC {
 			       const double,const double,const double,
 			       ATOOLS::Vec4D &, ATOOLS::Vec4D &,const double,const double);
 
-    double MasslessPropWeight(double,double,double,double,double&);
     double MasslessPropMomenta(double,double,double,double);
+    double MasslessPropWeight(double,double,double,double,double&);
+    double MasslessPropMomenta(double,double,double,double,double);
+    double MasslessPropWeight(double,double,double,double,double,double&);
 
     double ExponentialMomenta(double,double,double,double[],double);
     double ExponentialWeight(double,double,double,double[],double,double&);

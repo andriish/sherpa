@@ -26,11 +26,14 @@ using namespace METOOLS;
 using namespace std;
 
 Decay_Handler_Base::Decay_Handler_Base() :
-  p_softphotons(NULL), p_decaymap(NULL), p_bloblist(NULL), p_ampl(NULL),
+  p_softphotons(NULL), p_polarization_handler(NULL), p_decaymap(NULL), p_bloblist(NULL), p_ampl(NULL),
+  m_decaymatrices(std::vector<METOOLS::Decay_Matrix>()),
   m_stretcher(Momenta_Stretcher("Decay_Handler")),
-  m_qedmode(0), m_spincorr(false), m_decaychainend(false), m_cluster(true),
-  m_mass_smearing(1), m_oserrors(0)
+  m_qedmode(0), m_spincorr(false), m_polcrosssec(false),
+  m_decaychainend(false), m_cluster(true), m_mass_smearing(1), m_oserrors(0)
 {
+  auto& s = Settings::GetMainSettings();
+  m_specialtauspincorr = s["SPECIAL_TAU_SPIN_CORRELATIONS"].SetDefault(0).Get<size_t>();
 }
 
 Decay_Handler_Base::~Decay_Handler_Base()
@@ -38,6 +41,7 @@ Decay_Handler_Base::~Decay_Handler_Base()
   if (m_oserrors>0)
     msg_Error()<<METHOD<<" with "<<m_oserrors<<" particles not on their mass shell.\n";
   if (p_decaymap) delete p_decaymap; p_decaymap=NULL;
+  if (p_polarization_handler) { delete p_polarization_handler;  p_polarization_handler = NULL; }
 }
 
 class Decay_Width_Sorter {
@@ -165,6 +169,65 @@ void Decay_Handler_Base::BoostAndStretch(Blob* blob, const Vec4D& labmom)
   DEBUG_VAR(blob->MomentumConserved());
 }
 
+Blob* FindSPBlob(Blob* startblob)
+{
+  if (startblob->Type()==btp::Signal_Process) {
+    return startblob;
+  }
+
+  for (size_t i=0; i<startblob->NInP(); ++i) {
+    if (startblob->InParticle(i)->ProductionBlob()) {
+      Blob* blob = FindSPBlob(startblob->InParticle(i)->ProductionBlob());
+      if (blob) return blob;
+    }
+  }
+  return NULL;
+}
+
+
+typedef std::vector<std::pair<std::pair<ATOOLS::Flavour,ATOOLS::Vec4D>, Spin_Density*> > SpinDensityMap;
+bool Decay_Handler_Base::DoSpecialDecayTauSC(Particle* part)
+{
+  if (!m_specialtauspincorr) return false;
+  Blob* blob=part->ProductionBlob();
+  if (blob==NULL || blob->Type()!=btp::Fragmentation) return false;
+  for (size_t i=0; i<blob->NOutP(); ++i)
+    if (blob->OutParticle(i)->Flav().Kfcode()!=kf_tau)
+      return false;
+  DEBUG_FUNC(*part);
+
+  Blob* signal=FindSPBlob(blob);
+  if (!signal) {
+    PRINT_INFO("Signal blob not found.");
+    return false;
+  }
+  Blob_Data_Base* data = (*signal)["Tau_SpinDensity"];
+  SpinDensityMap* tau_spindensity = data ? data->Get<SpinDensityMap*>() : NULL;
+  if (!tau_spindensity) return false;
+
+  double bestDeltaR=1000.0; Spin_Density* sigma_tau=NULL;
+  for (SpinDensityMap::iterator it=tau_spindensity->begin(); it!=tau_spindensity->end(); ++it) {
+    if (it->first.first==part->Flav()) {
+      double newDeltaR=part->Momentum().DR(it->first.second);
+      if (newDeltaR<bestDeltaR) {
+        bestDeltaR=newDeltaR;
+        sigma_tau=it->second;
+      }
+    }
+  }
+  if (sigma_tau==NULL) {
+    PRINT_INFO("Tau Spin_Density not found");
+  }
+  else {
+    DEBUG_VAR(*sigma_tau);
+    sigma_tau->SetParticle(part);
+    Decay_Matrix* D=FillDecayTree(part->DecayBlob(), sigma_tau);
+    delete D;
+    return true;
+  }
+  return false;
+}
+
 void Decay_Handler_Base::TreatInitialBlob(ATOOLS::Blob* blob,
                                           METOOLS::Amplitude2_Tensor* amps,
                                           const Particle_Vector& origparts)
@@ -172,6 +235,8 @@ void Decay_Handler_Base::TreatInitialBlob(ATOOLS::Blob* blob,
   DEBUG_FUNC("");
   DEBUG_VAR(*blob);
   m_decaychainend=false;
+  // delete decay matrices from the previous event
+  if (m_polcrosssec && !m_decaymatrices.empty()) m_decaymatrices=std::vector<METOOLS::Decay_Matrix>();
   // random shuffle, against bias in spin correlations and mixing
   Particle_Vector daughters = blob->GetOutParticles();
   std::vector<size_t> shuffled(daughters.size());
@@ -231,8 +296,21 @@ void Decay_Handler_Base::TreatInitialBlob(ATOOLS::Blob* blob,
           DEBUG_VAR(sigma);
           D=FillDecayTree(daughters[i]->DecayBlob(), &sigma);
           D->SetParticle(origparts[i]);
+
+          // save all decay matrices for later transformation to desired bases of polarization definition
+          // and calculation of polarized cross sections
+          if (m_polcrosssec) {
+            // TODO: What happens if vector bosons decay into unstable particles?
+            m_decaymatrices.push_back(*D);
+          }
         }
-        if (amps->Contains(origparts[i])) {
+        if (amps->Contains(origparts[i]) &&
+            // Contract tau spins here only if they are globally stable or decayed here,
+            // i.e. not in hard decays if taus will be decayed in hadron decays
+            // (this is relevant e.g. for tttautau)
+            (origparts[i]->Flav().Kfcode()!=kf_tau ||
+             Flavour(kf_tau).IsStable() ||
+             Decays(Flavour(kf_tau)))) {
           DEBUG_INFO("contracting with D["<<D->Particle()<<"]");
           amps->Contract(D);
         }
@@ -241,8 +319,13 @@ void Decay_Handler_Base::TreatInitialBlob(ATOOLS::Blob* blob,
       else {
         Spin_Density sigma(daughters[i]);
         if (Decays(daughters[i]->Flav())) {
-          Decay_Matrix* D=FillDecayTree(daughters[i]->DecayBlob(), &sigma);
-          delete D;
+          if (DoSpecialDecayTauSC(daughters[i])) {
+            DEBUG_INFO("did special tau spin correlation treatment");
+          }
+          else {
+            Decay_Matrix* D=FillDecayTree(daughters[i]->DecayBlob(), &sigma);
+            delete D;
+          }
         }
       }
     }
@@ -312,10 +395,25 @@ Decay_Matrix* Decay_Handler_Base::FillDecayTree(Blob * blob, Spin_Density* s0)
         (blob->Type()==btp::Hadron_Decay &&
          blob->Has(blob_status::needs_showers))) {
       DEBUG_INFO("is stable.");
-      if (daughters[i]->Flav().Kfcode()==kf_tau &&
-          !daughters[i]->Flav().IsStable() &&
+      if (m_specialtauspincorr && daughters[i]->Flav().Kfcode()==kf_tau &&
+          !daughters[i]->Flav().IsStable() && blob->Type()==btp::Hard_Decay &&
           rpa->gen.SoftSC()) {
-        DEBUG_INFO("  ... but keeping tau spin density for hadronic tau decays.");
+        DEBUG_INFO("  keeping tau spin information for hadronic tau decays.");
+        SpinDensityMap* tau_spindensity;
+        Blob* spblob(FindSPBlob(blob));
+        if (!spblob) THROW(fatal_error, "Internal Error 1");
+        Blob_Data_Base * bdb((*spblob)["Tau_SpinDensity"]);
+        if (!bdb) {
+          tau_spindensity = new SpinDensityMap;
+          spblob->AddData("Tau_SpinDensity",new Blob_Data<SpinDensityMap*>(tau_spindensity));
+        }
+        else {
+          tau_spindensity = bdb->Get<SpinDensityMap*>();
+        }
+        tau_spindensity->push_back(make_pair(make_pair(daughters[i]->Flav(), daughters[i]->Momentum()),
+                                             new Spin_Density(daughters[i],amps)));
+        DEBUG_VAR(*(tau_spindensity->back().second));
+        tau_spindensity->back().second->SetParticle(NULL);
       }
       else if (m_spincorr) {
         Decay_Matrix* D=new Decay_Matrix(daughters[i]);
@@ -472,7 +570,7 @@ Cluster_Amplitude* Decay_Handler_Base::ClusterConfiguration(Blob *const bl)
       }
       if (lij) break;
     }
-    if (lij==NULL) THROW(fatal_error,"Internal eror");
+    if (lij==NULL) THROW(fatal_error,"Internal error");
     for (size_t i(ampl->NIn());i<ampl->Legs().size();++i) {
       Cluster_Leg *cl(ampl->Leg(i));
       if (cl->Id()&lij->Id()) continue;

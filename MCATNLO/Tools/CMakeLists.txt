@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,15 @@ target_include_directories(MCatNLOTools PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS MCatNLOTools DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(MCatNLOTools        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME MCatNLOTools SOVERSION 0.0.0)
 set_target_properties(MCatNLOTools        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Tools_SOURCES Parton.C
+                  Singlet.C)
+
+set(Tools_HEADERS Parton.H
+                  Singlet.H)
+
+sherpa_create_git_info(Tools)
+ 
+add_library(MCatNLOTools SHARED ${Tools_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(MCatNLOTools MCatNLOTools)
+>>>>>>> upstream/master

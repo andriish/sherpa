@@ -8,7 +8,7 @@ made available to Sherpa by running
 
 where ``<path-to-ufo-model>`` specifies the location of the directory
 where the UFO model can be found. UFO support must be enabled using
-the :option:`--enable-ufo` option of the configure script, as
+the :option:`-DSHERPA_ENABLE_UFO=ON` option of the configure script, as
 described in :ref:`Installation`. This requires Python version 2.6 or
 later and an installation of SCons.
 
@@ -61,8 +61,9 @@ extremely complex model with many high-multiplicity vertices, the
 ``Sherpa-generate-model`` step might require a lot of CPU time and memory
 even though not all vertices might be necessary for the scattering processes
 you plan to study. In such a case it is advised to restrict the number of
-external particles in Lorentz functions to the default of ``--lorentznmax 4``
-and only increase that number if higher-point functions are needed.
+external particles in Lorentz and color functions to the default of
+``--nmax 4``. Of course you can increase that number if higher-point vertices
+are needed.
 
 For more details on the
 Sherpa interface to FeynRules please consult
@@ -80,7 +81,7 @@ and HEFT). The use of UFO models is only supported by Comix.
 .. The MSSM is implemented via UFO, cf.
 .. @uref{https://feynrules.irmp.ucl.ac.be/wiki/MSSM}.
 .. In order to use this model, Sherpa must be installed with python support,
-.. using :option:`--enable-pyext`, as described in @xref{Installation}.
+.. using :option:`-DSHERPA_ENABLE_PYTHON=ON`, as described in @xref{Installation}.
 .. Once installed, the model is made available to Sherpa by running
 ..
 .. .. code-block::

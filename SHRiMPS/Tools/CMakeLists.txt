@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -25,3 +26,19 @@ target_include_directories(ShrimpsTools PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS ShrimpsTools DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(ShrimpsTools        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME ShrimpsTools SOVERSION 0.0.0)
 set_target_properties(ShrimpsTools        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Tools_SOURCES DEQ_Solver.C
+                  Kernels.C
+                  MinBias_Parameters.C)
+
+set(Tools_HEADERS Parameter_Structures.H
+                  Special_Functions.H
+                  DEQ_Solver.H
+                  Kernels.H
+                  MinBias_Parameters.H)
+
+sherpa_create_git_info(Tools)
+ 
+add_library(ShrimpsTools SHARED ${Tools_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(ShrimpsTools ShrimpsTools)
+>>>>>>> upstream/master

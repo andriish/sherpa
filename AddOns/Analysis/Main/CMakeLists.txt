@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -33,3 +34,18 @@ target_include_directories(SherpaAnalysis PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS SherpaAnalysis DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaAnalysis        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaAnalysis SOVERSION 0.0.0)
 set_target_properties(SherpaAnalysis        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES Analysis_Object.C
+                 Primitive_Analysis.C
+                 Analysis_Handler.C)
+
+set(Main_HEADERS Analysis_Object.H
+                 Primitive_Analysis.H
+                 Analysis_Handler.H)
+
+sherpa_create_git_info(Main)
+
+add_library(SherpaAnalysis SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+target_link_libraries(SherpaAnalysis PRIVATE SherpaAnalyses SherpaObservables SherpaAnalysisTools SherpaAnalysisTrigger)
+sherpa_handle_shared_library(SherpaAnalysis SherpaAnalysis)
+>>>>>>> upstream/master

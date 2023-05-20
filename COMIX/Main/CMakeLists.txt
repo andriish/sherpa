@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -25,3 +26,20 @@ target_include_directories(Comix PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS Comix DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(Comix        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME Comix SOVERSION 0.0.0)
 set_target_properties(Comix        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES Process_Base.C
+                 Process_Group.C
+                 Single_Process.C
+                 Single_Dipole_Term.C
+                 Comix.C)
+
+set(Main_HEADERS Process_Base.H
+                 Process_Group.H
+                 Single_Process.H
+                 Single_Dipole_Term.H)
+
+sherpa_create_git_info(Main)
+ 
+add_library(Comix SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(Comix Comix)
+>>>>>>> upstream/master

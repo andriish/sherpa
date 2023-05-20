@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,13 @@ target_include_directories(ComixAmplitude PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS ComixAmplitude DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(ComixAmplitude        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME ComixAmplitude SOVERSION 0.0.0)
 set_target_properties(ComixAmplitude        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Amplitude_SOURCES Amplitude.C)
+
+set(Amplitude_HEADERS Amplitude.H)
+
+sherpa_create_git_info(Amplitude)
+ 
+add_library(ComixAmplitude SHARED ${Amplitude_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(ComixAmplitude ComixAmplitude)
+>>>>>>> upstream/master

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -23,3 +24,17 @@ target_include_directories(ExtraXS2_2 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS ExtraXS2_2 DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(ExtraXS2_2        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME ExtraXS2_2 SOVERSION 0.0.0)
 set_target_properties(ExtraXS2_2        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Two2Two_SOURCES XS_Drell_Yan.C
+                    XS_DiPhoton.C
+                    XS_QCD.C
+                    ee_Y4S_BB.C
+                    gg_yy.C
+                    yy_bobo.C
+                    DMDM_mumu.C)
+
+sherpa_create_git_info(Two2Two)
+ 
+add_library(ExtraXS2_2 SHARED ${Two2Two_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(ExtraXS2_2 ExtraXS2_2)
+>>>>>>> upstream/master

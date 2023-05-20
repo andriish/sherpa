@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -32,3 +33,16 @@ target_include_directories(SherpaAnalyses PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS SherpaAnalyses DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaAnalyses        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaAnalyses SOVERSION 0.0.0)
 set_target_properties(SherpaAnalyses        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Analyses_SOURCES Analysis_Base.C
+                     WPolarization_Analysis.C
+                     ATLAS_CONF_2011_038.C
+                     xQ2_Analysis.C)
+
+set(Analyses_HEADERS Analysis_Base.H)
+
+sherpa_create_git_info(Analyses)
+ 
+add_library(SherpaAnalyses SHARED ${Analyses_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(SherpaAnalyses SherpaAnalyses)
+>>>>>>> upstream/master

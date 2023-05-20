@@ -24,46 +24,35 @@ current working directory with
    $ tar -zxf SHERPA-MC-<VERSION>.tar.gz
 
 Alternatively, it can also be accessed via Git through the location
-specified on the download page. In that case, before continuing, it is
-necessary to construct the build scripts by running ``autoreconf -i``
-once after cloning the Git repo.
+specified on the download page. 
 
 To guarantee successful installation, the following tools should be
 available on the system:
 
-  * C++ and Fortran compilers (e.g. from the gcc suite)
-  * make
-  * `SQLite 3 <http://www.sqlite.org/>`_
-    (including the -dev package if installed through a package manager)
+  * C++ compiler
+  * cmake
+  * make or ninja
 
-If SQLite is installed in a non-standard location, please specify the
-installation path using option
-:option:`--with-sqlite3=/path/to/sqlite`.  If SQLite is not installed
-on your system, the Sherpa configure script provides the fallback
-option of installing it into the same directory as Sherpa itself.  To
-do so, please run configure with option
-:option:`--with-sqlite3=install` (This may not work if you are
-cross-compiling using :option:`--host`.  In this case, please `install
-SQLite <http://www.sqlite.org/download.html>`_ by yourself and
-reconfigure using :option:`--with-sqlite3=/path/to/sqlite`).
+
+Recommended:   
+  * Fortran compiler
+  * LHAPDF  (including devel packages). If not available, use the `-DSHERPA_ENABLE_INSTALL_LHAPDF=ON` cmake option to install LHAPDF on-the-fly during the Sherpa installation (internet connection required).
+  * libzip  (including devel packages). If not available, use the `-DSHERPA_ENABLE_INSTALL_LIBZIP=ON` cmake option to install libzip on-the-fly during the Sherpa installation (internet connection required).
 
 Compilation and installation proceed through the following commands if
 you use the distribution tarball:
 
 .. code-block:: shell-session
 
-   $ ./configure [options]
-   $ make install
+   $ cd SHERPA-MC-<VERSION>/
+   $ cmake -S . -B <builddir> [+ optional configuration options described below]
+   $ cmake --build <builddir> [other build options, e.g. -j 8]
+   $ cmake --install <builddir>
 
+where `<builddir>` has to be replaced with the (temporary) directory in which intermediate files are stored during the build process.
+You can simply use the current working directory, i.e. `cmake -S . -B .` to compile in-source if you want to keep everything Sherpa-related in one directory.
 
-To install from a cloned git repository run:
-
-.. code-block:: shell-session
-
-   $ autoreconf -i
-   $ mkdir build && cd build
-   $ ../configure [options]
-   $ make install
+Note that re-running ``cmake`` with different configuration options is `not the same <https://gitlab.kitware.com/cmake/cmake/-/issues/19622>`_ as running it in a fresh working directory. Use ``ccmake .`` instead to check/change the current configuration. To start afresh, e.g. to pick up a different version of a dependency, you can use the ``cmake --fresh [...]`` option in recent versions of cmake, or just delete the cache (``rm -rf CMakeCache.txt CMakeFiles``).
 
 If not specified differently, the directory structure after
 installation is organized as follows
@@ -83,8 +72,8 @@ installation is organized as follows
 
 
 The installation directory ``$(prefix)`` can be specified by using the
-``./configure --prefix /path/to/installation/target`` directive and
-defaults to the current working directory.
+``-DCMAKE_INSTALL_PREFIX=/path/to/installation/target`` directive and
+defaults to the current working directory (`.`).
 
 If Sherpa has to be moved to a different directory after the
 installation, one has to set the following environment variables for
@@ -96,32 +85,36 @@ each run:
   * ``LD_LIBRARY_PATH=$SHERPA_LIBRARY_PATH:$LD_LIBRARY_PATH``
 
 
-Sherpa can be interfaced with various external packages, e.g. `HepMC
-<http://lcgapp.cern.ch/project/simu/HepMC/>`_, for event output, or
-`Rivet <https://rivet.hepforge.org/>`_, for analysis. For this to work,
-the user has to pass the appropriate commands to the configure
-step. This is achieved as shown below:
+Sherpa can be interfaced with various external packages,
+e.g. `HepMC <http://hepmc.web.cern.ch/hepmc/>`_ for event output,
+`LHAPDF <https://lhapdf.hepforge.org/>`_ for PDF sets,
+or `Rivet <https://rivet.hepforge.org/>`_ for analysis.
+For this to work, the user has to add the corresponding options to the
+cmake configuration, e.g. for Rivet:
 
 .. code-block:: shell-session
 
-   $ ./configure --enable-hepmc3=/path/to/hepmc --enable-rivet=/path/to/rivet
+   $  cmake [...] -DSHERPA_ENABLE_RIVET=ON
+
+If your Rivet installation is not in a standard directory, you also have to
+point cmake to the path where Rivet is installed as follows:
+
+.. code-block:: shell-session
+
+   $  cmake [...] -DRIVET_DIR=/my/rivet/install/dir
 
 Here, the paths have to point to the top level installation
 directories of the external packages, i.e. the ones containing the
 ``lib/``, ``share/``, ... subdirectories.
 
+Other external packages are activated using equivalent configuration options.
 For a complete list of possible configuration options run
-:option:`./configure --help`
-
-.. If you want to use the built-in interface to Lund fragmentation and hadron
-.. decays, you have to compile with Pythia support by specifying the
-.. ``--enable-pythia`` option without any argument.
+``cmake -LA``. Be aware that the capitalisation of the ``-D<name>_DIR``
+option might differ depending on the tool.
 
 The Sherpa package has successfully been compiled, installed and
-tested on SuSE, RedHat / Scientific Linux and Debian / Ubuntu Linux
-systems using the GNU C++ compiler versions 3.2, 3.3, 3.4, and 4.x as
-well as on Mac OS X 10 using the GNU C++ compiler version 4.0. In all
-cases the GNU FORTRAN compiler g77 or gfortran has been employed.
+tested on Arch, SuSE, RedHat / Scientific Linux and Debian / Ubuntu Linux/ Mac OS X
+systems using the GNU compilers collection, clang and Intel OneAPI 2022.
 
 If you have multiple compilers installed on your system, you can use
 shell environment variables to specify which of these are to be
@@ -129,7 +122,7 @@ used. A list of the available variables is printed with
 
 .. code-block:: shell-session
 
-   $ ./configure --help
+   $ -DCMAKE_CXX_COMPILER=myc++compiler
 
 in the Sherpa top level directory and looking at the last
 lines. Depending on the shell you are using, you can set these
@@ -137,9 +130,9 @@ variables e.g. with export (bash) or setenv (csh).  Examples:
 
 .. code-block:: bash
 
-   export CXX=g++-3.4
-   export CC=gcc-3.4
-   export CPP=cpp-3.4
+   export CXX=g++-11
+   export CC=gcc-11
+   export CPP=cpp-11
 
 
 Installation on Cray XE6 / XK7
@@ -150,7 +143,7 @@ following configure command should be used
 
 .. code-block:: shell-session
 
-   $ ./configure <your options> --enable-mpi --host=i686-pc-linux CC=CC CXX=CC FC='ftn -fPIC' LDFLAGS=-dynamic
+   $ cmake -DSHERPA_ENABLE_MPI=ON <your options> 
 
 Sherpa can then be run with
 
@@ -165,11 +158,11 @@ Installation on IBM BlueGene/Q
 ==============================
 
 Sherpa has been installed successfully on an IBM BlueGene/Q system.
-The following configure command should be used
+The following cmake command should be used
 
 .. code-block:: shell-session
 
-   $ ./configure <your options> --enable-mpi --host=powerpc64-bgq-linux CC=mpic++ CXX=mpic++ FC='mpif90 -fPIC -funderscoring' LDFLAGS=-dynamic
+   $ cmake <your options> -DSHERPA_ENABLE_MPI=ON -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_Fortran_COMPILER=mpif90 
 
 Sherpa can then be run with
 
@@ -180,26 +173,14 @@ Sherpa can then be run with
 MacOS Installation
 ==================
 
-Since it is more complicated to set up the necessary compiler
-environment on a Mac we recommend using a package manager to install
-Sherpa and its dependencies. David Hall is hosting a repository for
-Homebrew packages at: `http://davidchall.github.io/homebrew-hep/
-<http://davidchall.github.io/homebrew-hep/>`_
+Installation on macOS has been tested with the native clang compiler and the native ``make``, installed through the Xcode Command Line Tools,
+and the package ``cmake``, installed through `Homebrew <https://brew.sh/>`_. With this setup it runs analogously to the usual installation procedure. 
 
-In case you are compiling yourself, please be aware of the following
+Please be aware of the following
 issues which have come up on Mac installations before:
 
 * On 10.4 and 10.5 only gfortran is supported, and you will have
   to install it e.g. from HPC
-
-* If you want to reconfigure, i.e. run the command ``autoreconf`` or
-  ``(g)libtoolize``, you have to make sure that you have a recent
-  version of GNU libtool (>=1.5.22 has been tested). Don’t confuse
-  this with the native non-GNU libtool which is installed in
-  ``/usr/bin/libtool`` and of no use! Also make sure that your autools
-  (autoconf >= 2.61, automake >= 1.10 have been tested) are of recent
-  versions. All this should not be necessary though, if you only run
-  ``configure``.
 
 * Make sure that you don’t have two versions of g++ and libstdc++
   installed and being used inconsistently. This appeared e.g. when the
@@ -207,6 +188,8 @@ issues which have come up on Mac installations before:
   Sherpa to use the native MacOS compilers but link the libstdc++ from
   Fink (which is located in /sw/lib). You can find out which libraries
   are used by Sherpa by running ``otool -L bin/Sherpa``
+
+* Depending on your setup, it might be necessary to set the ``DYLD_LIBRARY_PATH`` to include ``$INSTALL_PREFIX/lib/SHERPA-MC``.
 
 .. _Running Sherpa:
 
@@ -291,9 +274,7 @@ the example setups.
 If AMEGIC++ is used, Sherpa requires an initialization run, where C++
 source code is written to disk. This code must be compiled into
 dynamic libraries by the user by running the makelibs script in the
-working directory.  Alternatively, if `scons <http://www.scons.org/>`_
-is installed, you may invoke :kbd:`<prefix>/bin/make2scons` and run
-:kbd:`scons install`.  After this step Sherpa is run again for the
+working directory.  After this step Sherpa is run again for the
 actual cross section integrations and event generation.  For more
 information on and examples of how to run Sherpa using AMEGIC++, see
 :ref:`Running Sherpa with AMEGIC++`.
@@ -673,14 +654,7 @@ user (see ``./makelibs -h`` for help):
 
    $ ./makelibs
 
-Note that the following tools have to be available for this step:
-``autoconf``, ``automake`` and ``libtool``.
-
-Alternatively, if `scons <http://www.scons.org/>`_ is installed, you
-may invoke :kbd:`<prefix>/bin/make2scons` and run :kbd:`scons
-install`.  If scons was detected during the compilation of Sherpa,
-also makelibs uses ``scons`` per default (can be forced to use
-``autotools`` by :kbd:`./makelibs -s`).
+Note that the ``cmake`` tool has to be available for this step
 
 .. index:: AMEGIC_LIBRARY_MODE
 

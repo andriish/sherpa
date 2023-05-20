@@ -265,8 +265,6 @@ void Beam_Parameters::RegisterDefaultBeams() {
   m_settings["BEAM_ENERGIES"].SetDefault({energy1, energy2});
 
   m_settings["BEAM_POLARIZATIONS"].SetDefault({0.0, 0.0});
-  m_settings["BEAM_SMIN"].SetDefault(1e-10);
-  m_settings["BEAM_SMAX"].SetDefault(1.0);
 }
 
 void Beam_Parameters::RegisterDarkMatterDefaults() {
@@ -307,13 +305,10 @@ bool Beam_Parameters::SpecifyMode() {
 }
 
 bool Beam_Parameters::SpecifySpectra() {
-  char help[20];
   vector<string> beam_spectra{ m_settings["BEAM_SPECTRA"].GetVector<string>() };
   if (beam_spectra.size() == 0 || beam_spectra.size() > 2)
     THROW(fatal_error, "Specify either one or two values for `BEAM_SPECTRA'.");
   for (short int num=0;num<2;num++) {
-    sprintf(help,"%i",num+1);
-    string number   = string(help);
     string bs{ (num == 0) ? beam_spectra.front() : beam_spectra.back() };
     if (bs == "Monochromatic" || bs == "None")
       m_beamspec[num] = beamspectrum::monochromatic;

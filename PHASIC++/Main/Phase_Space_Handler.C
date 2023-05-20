@@ -32,7 +32,7 @@ Integration_Info *PHASIC::Phase_Space_Handler::p_info=NULL;
 Phase_Space_Handler::Phase_Space_Handler(Process_Integrator *proc,double error,
                                          const std::string eobs,
                                          const std::string efunc): m_name(proc->Process()->Name()), p_process(proc), p_active(proc),
-      p_integrator(NULL), p_beamhandler(proc->Beam()), m_pspoint(Phase_Space_Point()),
+      p_integrator(NULL), p_beamhandler(proc->Beam()), m_pspoint(Phase_Space_Point(this)),
       p_isrhandler(proc->ISR()), p_flavours(proc->Process()->Flavours()),
       m_nin(proc->NIn()), m_nout(proc->NOut()), m_nvec(m_nin + m_nout),
       m_initialized(false), m_sintegrator(0), m_killedpoints(0),
@@ -40,7 +40,9 @@ Phase_Space_Handler::Phase_Space_Handler(Process_Integrator *proc,double error,
   RegisterDefaults();
   InitParameters(error);
   p_process->SetPSHandler(this);
-
+  FSR_Channels * fsrchannels =
+    new FSR_Channels(this,"fsr_"+p_process->Process()->Name());
+  SetFSRIntegrator(fsrchannels);
   p_lab.resize(m_nvec);
 }
 
@@ -49,12 +51,12 @@ Phase_Space_Handler::~Phase_Space_Handler() { delete p_integrator; }
 bool Phase_Space_Handler::CreateIntegrators() {
   Channel_Creator channelcreator(this);
   if (channelcreator()) {
-    m_pspoint.Init(this);
+    m_pspoint.Init();
     m_psenhance.Init(this);
     m_psenhance.SetObservable(m_enhanceObs, p_process->Process());
     m_psenhance.SetFunction(m_enhanceFunc, p_process->Process());
     m_enhanceweight =
-        m_psenhance.Factor(p_process->Process(), p_process->TotalXS());
+        m_psenhance.Factor(p_process->TotalXS());
     return true;
   } else
     THROW(fatal_error, "Creation of integrators failed.")
@@ -83,8 +85,8 @@ Phase_Space_Handler::Differential(Process_Integrator *const process,
   if (!process->Process()->GeneratePoint() ||
       !m_pspoint(process,m_cmode))
     return 0.0;
-  for (size_t i(0);i<p_lab.size();++i) {
-    if (p_lab[i].Nan()) return 0.0;
+  for (auto p : p_lab) {
+    if (p.Nan()) return 0.0;
   }
   // phase space trigger, calculate and construct weights
   if (process->Process()->Trigger(p_lab)) {
@@ -92,8 +94,7 @@ Phase_Space_Handler::Differential(Process_Integrator *const process,
     m_psweight = CalculatePS();
     m_wgtmap   = CalculateME(varmode);
     m_wgtmap  *= m_psweight;
-    m_wgtmap  *= (m_enhanceweight = m_psenhance.Factor(p_process->Process(),
-                                                       p_process->TotalXS()));
+    m_wgtmap  *= (m_enhanceweight = m_psenhance.Factor(p_process->TotalXS()));
     m_wgtmap  *= (m_ISsymmetryfactor = m_pspoint.ISSymmetryFactor());
     p_lab      = process->Momenta();
     if (m_printpspoint || msg_LevelIsDebugging()) PrintIntermediate();
@@ -200,7 +201,7 @@ void Phase_Space_Handler::AddPoint(const double _value)
   if (p_process->TotalXS()==0.0) value=(_value?1.0:0.0);
   if (value!=0.0) {
     m_pspoint.AddPoint(value);
-    m_psenhance.AddPoint(value,p_process->Process());
+    m_psenhance.AddPoint(value);
   }
 }
 
@@ -239,6 +240,7 @@ void Phase_Space_Handler::RegisterDefaults() const
   settings["FINISH_OPTIMIZATION"].SetDefault(true);
   settings["PRINT_PS_POINTS"].SetDefault(false);
   settings["PS_PT_FILE"].SetDefault("");
+  settings["PS_POINT"].SetDefault("");
   settings["TCHANNEL_ALPHA"].SetDefault(0.9);
   settings["SCHANNEL_ALPHA"].SetDefault(0.5);
   settings["CHANNEL_EPSILON"].SetDefault(0.0);
@@ -273,23 +275,38 @@ void Phase_Space_Handler::CheckSinglePoint()
       else p_lab[i]=ToType<Vec4D>(vec.front());
       msg_Debugging()<<"p_lab["<<i<<"]=Vec4D"<<p_lab[i]<<";\n";
     }
-    Process_Base *proc(p_active->Process());
-    proc->Trigger(p_lab);
-    CalculateME(Variations_Mode::nominal_only);
-    msg->SetPrecision(16);
-    msg_Out()<<"// "<<proc->Name()<<"\n";
-    for (size_t i(0);i<p_lab.size();++i)
-      msg_Out()<<"p_lab["<<i<<"]=Vec4D"<<p_lab[i]<<";"<<std::endl;
-    if (proc->Get<Single_Process>()) {
-      msg_Out()<<"double ME = "<<proc->Get<Single_Process>()->LastXS()
-	       <<"; // in GeV^2, incl. symfacs"<<std::endl;
-      if (proc->GetSubevtList()) {
-	NLO_subevtlist * subs(proc->GetSubevtList());
-	for (size_t i(0);i<subs->size();++i) msg_Out()<<(*(*subs)[i]);
-      }
+  } else if (s["PS_POINT"].IsSetExplicitly()){
+    std::istringstream point(s["PS_POINT"].Get<std::string>());
+    std::string vec;
+    for (size_t i = 0; i<p_lab.size(); ++i) {
+      std::getline(point, vec);
+      if (vec.empty())
+        THROW(fatal_error, "Momentum missing for calculation. ")
+      auto pos1 = vec.find_first_of('(');
+      auto pos2 = vec.find_first_of(')');
+      vec = vec.substr(pos1, pos2-pos1+1);
+      if (vec[1] == '-') p_lab[i] = -ToType<Vec4D>(vec);
+      else p_lab[i] = ToType<Vec4D>(vec);
     }
-    THROW(normal_exit,"Computed ME^2");
+  } else
+    return ;
+  Process_Base *proc(p_active->Process());
+  proc->Trigger(p_lab);
+  CalculateME(Variations_Mode::nominal_only);
+  msg->SetPrecision(16);
+  msg_Out()<<"// "<<proc->Name()<<"\n";
+  for (size_t i(0);i<p_lab.size();++i)
+    msg_Out()<<"p_lab["<<i<<"]=Vec4D"<<p_lab[i]<<";"<<std::endl;
+  for (int i=0; i<proc->Size(); ++i) {
+    msg_Out()<<(*proc)[i]->Name()<<" ME = "<<(*proc)[i]->Get<Single_Process>()->LastXS()
+             <<", ME with PDF = "<<(*proc)[i]->Get<Single_Process>()->Last()
+             <<"; // in GeV^2, incl. symfacs"<<std::endl;
+    if (proc->GetSubevtList()) {
+      NLO_subevtlist * subs(proc->GetSubevtList());
+      for (size_t i(0);i<subs->size();++i) msg_Out()<<(*(*subs)[i]);
+    }
   }
+  THROW(normal_exit,"Computed ME^2");
 }
 
 void Phase_Space_Handler::TestPoint(ATOOLS::Vec4D *const p,

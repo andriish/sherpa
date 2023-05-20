@@ -97,11 +97,11 @@ void ISR_Handler::Output() {
               << " (internal structure = " << p_isrbase[1]->On() << ")\n";
 }
 
-void ISR_Handler::Init(const double *splimits) {
+void ISR_Handler::Init() {
   double s = (p_beam[0]->OutMomentum() + p_beam[1]->OutMomentum()).Abs2();
 
-  m_splimits[0] = s * splimits[0];
-  m_splimits[1] = ATOOLS::Min(s * splimits[1], s * Upper1() * Upper2());
+  m_splimits[0] = 0.;
+  m_splimits[1] = ATOOLS::Min(s, s * Upper1() * Upper2());
   m_splimits[2] = s;
   m_fixed_smin = m_splimits[0];
   m_fixed_smax = m_splimits[1];
@@ -172,7 +172,7 @@ void ISR_Handler::SetMasses(const Flavour_Vector &fl) {
 
 void ISR_Handler::SetPartonMasses(const Flavour_Vector &fl) { SetMasses(fl); }
 
-bool ISR_Handler::MakeISR(const double &sp, const double &y, Vec4D *p,
+bool ISR_Handler::MakeISR(const double &sp, const double &y, Vec4D_Vector& p,
                           const Flavour_Vector &flavs) {
   if (m_mode == 0) {
     m_x[1] = m_x[0] = 1.;
@@ -510,9 +510,7 @@ bool ISR_Handler::CheckRemnantKinematics(const ATOOLS::Flavour &fl, double &x,
   return p_remnants[beam]->TestExtract(fl, mom);
 }
 
-void ISR_Handler::Reset(const size_t i) const {
-  // if (p_isrbase[i]->PDF()!=NULL) p_isrbase[i]->Reset();
-}
+void ISR_Handler::Reset(const size_t i) const {}
 
 ATOOLS::Blob_Data_Base *ISR_Handler::Info(const int frame) const {
   if (frame == 0)

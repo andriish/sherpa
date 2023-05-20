@@ -182,7 +182,7 @@ seeds in different runs of the generator. When set to 1, existing
 random seed files are read and the seed is set to the next available
 value in the file before each event. When set to 2, seed files are
 written to disk.  These files are gzip compressed, if Sherpa was
-compiled with option :option:`--enable-gzip`.  When set to 3, Sherpa
+compiled with option :option:`-DSHERPA_ENABLE_GZIP=ON`.  When set to 3, Sherpa
 uses an internal bookkeeping mechanism to advance to the next
 predefined seed.  No seed files are written out or read in.
 
@@ -202,8 +202,9 @@ The following analysis handlers are currently available
 
 :option:`Internal`
   | Sherpa's internal analysis handler.
-  | To use this option, the package must be configured with option :option:`--enable-analysis`.
-  | An output directory can be specified using :ref:`ANALYSIS_OUTPUT`.
+  | To use this option, the package must be configured with option
+  | :option:`-DSHERPA_ENABLE_ANALYSIS=ON`. An output directory can
+  | be specified using :ref:`ANALYSIS_OUTPUT`.
 
 :option:`Rivet`
   | The Rivet package, see `Rivet Website <http://projects.hepforge.org/rivet/>`_.
@@ -376,7 +377,6 @@ Event output formats
 .. index:: HEPEVT
 .. index:: LHEF
 .. index:: Root
-.. index:: Delphes
 .. index:: FILE_SIZE
 .. index:: EVENT_FILE_PATH
 .. index:: EVENT_OUTPUT_PRECISION
@@ -440,7 +440,7 @@ The following formats are currently available:
   from the matrix-element-parton-shower interplay which would be
   otherwise stored.
 
-  Requires ``--enable-hepmc2=<path/to/hepmc2>``.
+  Requires ``-DSHERPA_ENABLE_HEPMC2=ON -DHepMC2_DIR=/path/to/hepmc2``.
 
 :option:`HepMC_Short`
 
@@ -450,7 +450,7 @@ The following formats are currently available:
   same as above, and ``HEPMC_USE_NAMED_WEIGHTS`` and
   ``HEPMC_EXTENDED_WEIGHTS`` can be used to customise.
 
-  Requires ``--enable-hepmc2=<path/to/hepmc2>``.
+  Requires ``-DSHERPA_ENABLE_HEPMC2=ON -DHepMC2_DIR=/path/to/hepmc2``.
 
 :option:`HepMC3_GenEvent`
   Generates output using HepMC3 library. The format of the output is
@@ -460,42 +460,7 @@ The following formats are currently available:
   GenEvent. 3: ROOT file with GenEvent objects writen into TTree.
   Otherwise similar to ``HepMC_GenEvent``.
 
-  Requires ``--enable-hepmc3=<path/to/hepmc3>``.
-
-:option:`Delphes_GenEvent`
-  Generates output in `Root <http://root.cern.ch>`_ format, which can
-  be passed to `Delphes <http://cp3.irmp.ucl.ac.be/projects/delphes>`_
-  for analyses.  Input events are taken from the HepMC
-  interface. Storage space can be reduced by up to 50% compared to
-  gzip compressed HepMC. This output format is available only if
-  Sherpa was configured and installed with options
-  :option:`--enable-root` and
-  :option:`--enable-delphes=/path/to/delphes`.
-
-:option:`Delphes_Short`
-  Generates output in `Root <http://root.cern.ch>`_ format, which can
-  be passed to `Delphes <http://cp3.irmp.ucl.ac.be/projects/delphes>`_
-  for analyses.  Only incoming beams and outgoing particles are
-  stored.
-
-:option:`PGS`
-  Generates output in `StdHEP <http://cepa.fnal.gov/psm/stdhep>`_
-  format, which can be passed to `PGS
-  <http://www.physics.ucdavis.edu/~conway/research/software/pgs/pgs4-general.htm>`_
-  for analyses. This output format is available only if Sherpa was
-  configured and installed with options
-  :option:`--enable-hepevtsize=4000` and
-  :option:`--enable-pgs=/path/to/pgs`.  Please refer to the PGS
-  documentation for how to pass StdHEP event files on to PGS.  If you
-  are using the LHC olympics executeable, you may run
-  ``./olympics --stdhep events.lhe <other options>``.
-
-:option:`PGS_Weighted`
-  Generates output in `StdHEP <http://cepa.fnal.gov/psm/stdhep>`_
-  format, which can be passed to `PGS
-  <http://www.physics.ucdavis.edu/~conway/research/software/pgs/pgs4-general.htm>`_
-  for analyses. Event weights in the HEPEV4 common block are stored in
-  the event file.
+  Requires ``-DSHERPA_ENABLE_HEPMC3=ON -DHepMC3_DIR=/path/to/hepmc3``.
 
 :option:`HEPEVT`
   Generates output in HepEvt format.
@@ -518,13 +483,12 @@ The following formats are currently available:
   Generates output in ROOT ntuple format **for NLO event generation
   only**.  For details on the ntuple format, see :ref:`A posteriori
   scale and PDF variations using the ROOT NTuple Output <A posteriori
-  scale and PDF variations using the ROOT NTuple Output>`.  This
-  output option is available only if Sherpa was linked to ROOT during
-  installation by using the configure option
-  ``--enable-root=/path/to/root``.  ROOT ntuples can be read back into
-  Sherpa and analyzed using the option :option:`EVENT_INPUT`. This
-  feature is described in :ref:`NTuple production`.
+  scale and PDF variations using the ROOT NTuple Output>`. ROOT ntuples can be
+  read back into Sherpa and analyzed using the option
+  :option:`EVENT_INPUT`. This feature is described in :ref:`NTuple production`.
 
+  Requires ``-DSHERPA_ENABLE_ROOT=ON -DROOT_DIR=/path/to/root``.
+  
 The output can be further customized using the following options:
 
 :option:`FILE_SIZE`
@@ -536,9 +500,9 @@ The output can be further customized using the following options:
 :option:`EVENT_OUTPUT_PRECISION`
   Steers the precision of all numbers written to file (default: 12).
 
-For all output formats except ROOT and Delphes, events can be written
+For all output formats except ROOT, events can be written
 directly to gzipped files instead of plain text. The option
-:option:`--enable-gzip` must be given during installation to enable
+:option:`-DSHERPA_ENABLE_GZIP=ON` must be given during installation to enable
 this feature.
 
 .. _On-the-fly event weight variations:
@@ -552,6 +516,9 @@ An important example is the variation of QCD scales and input PDF.
 There are also on-the-fly variations for approximate electroweak corrections,
 this is discussed in its own section, :ref:`Approximate Electroweak
 Corrections`.
+
+Specifying variations
+---------------------
 
 There are two ways to specify scale and PDF variations.
 Either using the unified ``VARIATIONS`` list,
@@ -614,7 +581,7 @@ which expands to a 7-point scale variation:
 
 .. code-block:: yaml
 
-   SCALE_VARIATION:
+   SCALE_VARIATIONS:
    - 4.0*
 
 is therefore equivalent to
@@ -747,6 +714,11 @@ reweighting is enabled (see below).
 The rest of this section applies to both the combined ``VARIATIONS``
 and the individual ``SCALE_VARIATIONS`` etc. syntaxes.
 
+Variation output
+----------------
+
+.. index:: OUTPUT_ME_ONLY_VARIATIONS
+
 The total cross section for all variations along with the nominal cross section
 are written to the standard output after the event generation has finalized.
 Additionally, some event output (see :ref:`Event output formats`) and analysis methods
@@ -767,8 +739,21 @@ For Rivet 3, the internal multi-weight handling capabilities are used instead,
 such that there are no alternate histogram files, just one containing
 histograms for all variations.
 Extending the naming convention, for pure strong coupling variations, an additional
-tag ``ASMZ=<val>`` is appended. Another set of tags is appended if shower scale
-variations are enabled, then giving ``PS:MUR=<fac>__PS:MUF=<fac>``.
+tag ``ASMZ=<val>`` is appended.
+If shower scale variations are disabled (either implicitly, because ``SHOWER_GENERATOR: None``,
+or explicitly, see below),
+you will find ``ME.MUR``/``ME.MUF`` tags instead of the simple ones
+to make explicit that the parton-shower scales are not varied with the ME scales.
+
+If parton-shower variations are enabled, ``CSS_REWEIGHT: true``
+(the default if parton showering is enabled),
+then pure ME-only variations are included along with the full variations in the
+HepMC/Rivet output by default. This can be disabled using
+``OUTPUT_ME_ONLY_VARIATIONS: false``.
+All weight names of ME-only variations
+include a "ME" as part of the keys to indicate that
+only the ME part of the calculation has been varied, e.g.
+``ME:MUR=<fac>__ME:MUF=<fac>__ME:LHAPDF=<id>``.
 
 The user must also be aware that, of course, the cross section of the
 event sample, changes when using an alternative event weight as
@@ -781,9 +766,35 @@ GenCrossSection entry of the event record, such that no manual intervention is
 required (as long as the correct cross section variation is picked in
 downstream processing steps).
 
+Variations for different event generation modes
+-----------------------------------------------
+
 The on-the-fly reweighting works for all event generation modes
 (weighted or (partially) unweighted) and all calculation types (LO,
 LOPS, NLO, NLOPS, NNLO, NNLOPS, MEPS\@LO, MEPS\@NLO and MENLOPS).
+
+NLO calculations
+````````````````
+
+.. index:: NLO_MUR_COEFFICIENT_FROM_VIRTUAL
+
+For NLO calculations, note that some loop providers (e.g. Recola)
+do not provide the pole coefficients, while others do (e.g. OpenLoops).
+For the former, Sherpa will automatically exclude the IR pole
+coefficients from the scale variation.
+One can also manually exclude them using
+``NLO_MUR_COEFFICIENT_FROM_VIRTUAL: false``.
+If they are excluded,
+then IR pole cancellation is assumed and, thus,
+only the UV renormalisation term pole coefficient is considered in the scale variation.
+
+Parton shower emissions
+```````````````````````
+
+.. index:: CSS_REWEIGHT
+.. index:: CSS_REWEIGHT_SCALE_CUTOFF
+.. index:: CSS_MAX_REWEIGHT_FACTOR
+
 By default, the reweighting of parton shower emissions is included in the variations.
 It can be disabled explicitly,
 using :option:`CSS_REWEIGHT: false`.  This should work out of the box for all
@@ -797,21 +808,13 @@ weights is implemented as :option:`CSS_MAX_REWEIGHT_FACTOR` (default: 1e3).
 Any variation weights accumulated during an event and larger than this factor
 will be ignored and reset to 1.
 
-ME-only variations are included along with the full variations in the
-HepMC/Rivet output by default. They can be disabled, e.g. when not using
-``CSS_REWEIGHT: false``, using
-``OUTPUT_ME_ONLY_VARIATIONS: false``.
-The extra weight names then include a "ME" as part of the keys to indicate that
-only the ME part of the calculation has been varied, e.g.
-``ME:MUR=<fac>__ME:MUF=<fac>__ME:LHAPDF=<id>``.
-
 .. _MPI parallelization:
 
 MPI parallelization
 ===================
 
 MPI parallelization in Sherpa can be enabled using the configuration
-option :option:`--enable-mpi`. Sherpa supports `OpenMPI
+option :option:`-DSHERPA_ENABLE_MPI=ON`. Sherpa supports `OpenMPI
 <http://www.open-mpi.org/>`_ and `MPICH2
 <http://www.mcs.anl.gov/research/projects/mpich2/>`_ . For detailed
 instructions on how to run a parallel program, please refer to the

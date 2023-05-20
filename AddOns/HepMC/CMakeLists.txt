@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Manually edited
  set(GITTAG  AddOns/HepMC)
  set(foo_SOURCES  Output_HepMC2_Genevent.C Output_HepMC2_Short.C Output_HepMC3_Genevent.C Output_HepMC3_Short.C)
@@ -5,11 +6,19 @@
  creategitinfo(foo ../HepMC/)
 
 if (SHERPA_ENABLE_HEPMC2)
+=======
+ set(foo_SOURCES  Output_HepMC2_Genevent.C Output_HepMC2_Short.C Output_HepMC3_Genevent.C Output_HepMC3_Short.C)
+ set(foo_HEADERS  Output_HepMC2_Genevent.H Output_HepMC2_Short.H Output_HepMC3_Genevent.H Output_HepMC3_Short.H)
+ sherpa_create_git_info(foo)
+
+if (HEPMC2_REQUIRED)
+>>>>>>> upstream/master
   set(SherpaHepMCOutput_SOURCES  Output_HepMC2_Genevent.C Output_HepMC2_Short.C)
   list(TRANSFORM SherpaHepMCOutput_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/../HepMC/")
   list(APPEND SherpaHepMCOutput_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C)
   add_library(SherpaHepMCOutput SHARED ${SherpaHepMCOutput_SOURCES})
   target_link_libraries(SherpaHepMCOutput PRIVATE ${HEPMC2_LIBRARIES})
+<<<<<<< HEAD
   target_include_directories(SherpaHepMCOutput PRIVATE ${HEPMC2_INCLUDE_DIR})
   install(TARGETS SherpaHepMCOutput DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
   set_target_properties(SherpaHepMCOutput       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaHepMCOutput SOVERSION 0.0.0)
@@ -17,11 +26,19 @@ if (SHERPA_ENABLE_HEPMC2)
 endif()
 
 if (SHERPA_ENABLE_HEPMC3)
+=======
+  target_include_directories(SherpaHepMCOutput PRIVATE ${HEPMC2_INCLUDE_DIRS})
+  sherpa_handle_shared_library(SherpaHepMCOutput SherpaHepMCOutput)
+endif()
+
+if (HEPMC3_REQUIRED)
+>>>>>>> upstream/master
   set(SherpaHepMC3Output_SOURCES  Output_HepMC3_Genevent.C Output_HepMC3_Short.C)
   list(TRANSFORM SherpaHepMC3Output_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/../HepMC/")
   list(APPEND SherpaHepMC3Output_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C)
   add_library(SherpaHepMC3Output SHARED ${SherpaHepMC3Output_SOURCES})
   target_link_libraries(SherpaHepMC3Output PRIVATE ${HEPMC3_LIB} ${HEPMC3_SEARCH_LIB})
+<<<<<<< HEAD
   if (SHERPA_ENABLE_HEPMC3_ROOTIO)
     target_link_libraries(SherpaHepMC3Output PRIVATE ${HEPMC3_ROOTIO_LIB})
   endif()
@@ -29,4 +46,11 @@ if (SHERPA_ENABLE_HEPMC3)
   install(TARGETS SherpaHepMC3Output DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
   set_target_properties(SherpaHepMC3Output       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaHepMC3Output SOVERSION 0.0.0)
   set_target_properties(SherpaHepMC3Output       PROPERTIES DEFINE_SYMBOL "")
+=======
+  if (SHERPA_ENABLE_HEPMC3_ROOT)
+    target_link_libraries(SherpaHepMC3Output PRIVATE ${HEPMC3_ROOTIO_LIB})
+  endif()
+  target_include_directories(SherpaHepMC3Output PRIVATE ${HEPMC3_INCLUDE_DIR})
+  sherpa_handle_shared_library(SherpaHepMC3Output SherpaHepMC3Output)
+>>>>>>> upstream/master
 endif()

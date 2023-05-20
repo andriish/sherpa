@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,15 @@ target_include_directories(DIMMain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS DIMMain DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(DIMMain        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME DIMMain SOVERSION 0.0.0)
 set_target_properties(DIMMain        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES Gamma.C
+                 MCatNLO.C)
+
+set(Main_HEADERS Gamma.H
+                 MCatNLO.H)
+
+sherpa_create_git_info(Main)
+ 
+add_library(DIMMain SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(DIMMain DIMMain)
+>>>>>>> upstream/master

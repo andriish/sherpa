@@ -83,7 +83,7 @@ void Cut_Data::Init(int _nin,const Flavour_Vector &_fl) {
   smin = sqr(smin);
 
   Settings& s = Settings::GetMainSettings();
-  double sijminfac{ s["INT_MINSIJ_FACTOR"].SetDefault(1e-24).Get<double>() };
+  double sijminfac{ s["INT_MINSIJ_FACTOR"].SetDefault(0.).Get<double>() };
   for (int i=0;i<ncut;i++) {
     for (int j=i;j<ncut;j++) {
       cosmin[i][j] = cosmin[j][i] = cosmin_save[i][j] = -1.;
@@ -99,14 +99,8 @@ void Cut_Data::Complete()
   for (int i=0;i<ncut;i++) {
     for (int j=i+1;j<ncut;j++) {
       if ((i<nin)^(j<nin)) continue;
-      scut[i][j] =  
-// 	Max(scut[i][j],2.*energymin[i]*energymin[j]*(1.-cosmax[i][j])+sqr(fl[i].SelMass())+sqr(fl[j].SelMass()));
-	Max(scut[i][j],2.*energymin[i]*energymin[j]-2.*sqrt(sqr(energymin[i])-sqr(fl[i].SelMass()))
-	    *sqrt(sqr(energymin[j])-sqr(fl[j].SelMass()))*cosmax[i][j]
-	    +sqr(fl[i].SelMass())+sqr(fl[j].SelMass()));
-      scut[i][j] = scut[j][i] = 
+      scut[i][j] = scut[j][i] =
 	Max(scut[i][j],sqr(fl[i].SelMass()+fl[j].SelMass()));
-//       std::cout<<i<<","<<j<<": "<<scut[i][j]<<std::endl;
     }
   } 
 
@@ -120,18 +114,19 @@ void Cut_Data::Complete()
     }
     if (i>=2) str|=(1<<i);
   }
-  smin = 0.;
+  double local_smin = 0.;
   double etmm = 0.; 
   double e1=0.,e2=0.;
   for (int i=2;i<ncut;i++) {
     if (etmin[i]>etmm) etmm = etmin[i];
-    smin += etmin[i];
+    local_smin += etmin[i];
     e1 += energymin[i];
     e2 += energymin[i]*cosmax[0][i];
   }
-  smin = Max(sqr(smin),sqr(e1)-sqr(e2));
+  smin = Max(smin,sqr(local_smin));
+  smin = Max(smin,sqr(e1)-sqr(e2));
   smin = Max(smin,sqr(2.*etmm));
-  smin = Max(Getscut(str),smin);
+  smin = Max(smin,Getscut(str));
 
   msg_Tracking()<<"Cut_Data::Complete(): s_{min} = "<<smin<<endl;
   m_smin_map.clear();

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -31,3 +32,15 @@ target_include_directories(SherpaGoSam PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS SherpaGoSam DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaGoSam        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaGoSam SOVERSION 0.0.0)
 set_target_properties(SherpaGoSam        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(GoSam_SOURCES GoSam_Virtual.C
+                  GoSam_Interface.C)
+
+set(GoSam_HEADERS GoSam_Virtual.H
+                  GoSam_Interface.H)
+
+sherpa_create_git_info(GoSam)
+ 
+add_library(SherpaGoSam SHARED ${GoSam_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(SherpaGoSam SherpaGoSam)
+>>>>>>> upstream/master

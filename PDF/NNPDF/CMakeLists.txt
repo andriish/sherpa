@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -30,3 +31,16 @@ target_include_directories(NNPDFSherpa PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS NNPDFSherpa DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(NNPDFSherpa        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME NNPDFSherpa SOVERSION 0.0.0)
 set_target_properties(NNPDFSherpa        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(NNPDF_SOURCES NNPDFDriver.cc
+                  PDF_NN.C)
+
+set(NNPDF_HEADERS NNPDFDriver.h)
+
+ set(NNPDF3archive   NNPDF31_nnlo_as_0118_mc.tar.bz2)
+
+sherpa_create_git_info(NNPDF)
+ 
+add_library(NNPDFSherpa SHARED ${NNPDF_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(NNPDFSherpa NNPDFSherpa)
+>>>>>>> upstream/master

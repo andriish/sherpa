@@ -22,13 +22,13 @@ if (HZTOOL_SEARCH_DIRS)
   find_path(HZTOOL_INCLUDE_DIR  heracmn.inc PATHS ${HZTOOL_SEARCH_DIRS} PATH_SUFFIXES include/hztool  NO_DEFAULT_PATH)
   find_library(HZTOOL_LIBRARY NAMES hztool PATHS ${HZTOOL_SEARCH_DIRS}  PATH_SUFFIXES lib lib64 NO_DEFAULT_PATH)
 else()
-find_path(HZTOOL_INCLUDE_DIR  heracmn.inc PATHS ${HZTOOL_SEARCH_DIRS} PATH_SUFFIXES include/hztool  )
-  find_library(HZTOOL_LIBRARY NAMES hztool PATHS_SUFFIXES lib lib64)
+find_path(HZTOOL_INCLUDE_DIR  heracmn.inc PATH_SUFFIXES include/hztool  ../include/hztool)
+  find_library(HZTOOL_LIBRARY NAMES hztool PATH_SUFFIXES lib lib64 ../lib ../lib64)
 endif()
-
-# handle the QUIETLY and REQUIRED arguments and set HZTOOL_FOUND to TRUE if
-# all listed variables are TRUE
+set(HZTOOL_VERSION 0.0.0)
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(HZTool DEFAULT_MSG HZTOOL_INCLUDE_DIR HZTOOL_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(HZTool REQUIRED_VARS HZTOOL_INCLUDE_DIR HZTOOL_LIBRARY
+                                 VERSION_VAR HZTOOL_VERSION
+                                 )
 
 mark_as_advanced(HZTool_FOUND)

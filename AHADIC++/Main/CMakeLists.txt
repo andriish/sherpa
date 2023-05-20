@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -25,3 +26,13 @@ target_include_directories(AhadicMain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS AhadicMain DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(AhadicMain        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME AhadicMain SOVERSION 0.0.0)
 set_target_properties(AhadicMain        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES  Ahadic.C)
+
+set(Main_HEADERS Ahadic.H)
+
+sherpa_create_git_info(Main)
+ 
+add_library(AhadicMain SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(AhadicMain AhadicMain)
+>>>>>>> upstream/master

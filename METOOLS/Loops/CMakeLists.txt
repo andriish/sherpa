@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -25,3 +26,21 @@ target_include_directories(METoolsLoops PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS METoolsLoops DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(METoolsLoops        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME METoolsLoops SOVERSION 0.0.0)
 set_target_properties(METoolsLoops        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Loops_SOURCES Master_Tadpole.C
+                  Master_Bubble.C
+                  Master_Triangle.C
+                  Master_Box.C
+                  PV_Tadpoles.C
+                  PV_Bubbles.C
+                  PV_Triangles.C)
+
+set(Loops_HEADERS Divergence_Array.H
+                  Master_Integrals.H
+                  PV_Integrals.H)
+
+sherpa_create_git_info(Loops)
+ 
+add_library(METoolsLoops SHARED ${Loops_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(METoolsLoops METoolsLoops)
+>>>>>>> upstream/master

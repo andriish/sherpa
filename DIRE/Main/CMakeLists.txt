@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -23,3 +24,12 @@ target_include_directories(DireMain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS DireMain DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(DireMain        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME DireMain SOVERSION 0.0.0)
 set_target_properties(DireMain        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Main_SOURCES Jet_Criterion.C
+                 Dire.C)
+
+sherpa_create_git_info(Main)
+ 
+add_library(DireMain SHARED ${Main_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(DireMain DireMain)
+>>>>>>> upstream/master

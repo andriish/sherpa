@@ -38,6 +38,9 @@ namespace ATOOLS {
     template <typename T>
     Scoped_Settings& SetDefault(std::initializer_list<std::initializer_list<T>>);
 
+    bool HasDefault() const;
+    Scoped_Settings& ResetDefault();
+
     template <typename T>
     Scoped_Settings& SetReplacementList(const std::map<std::string, T>& list);
 

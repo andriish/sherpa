@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,21 @@ target_include_directories(ExtraXSNLO PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS ExtraXSNLO DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(ExtraXSNLO        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME ExtraXSNLO SOVERSION 0.0.0)
 set_target_properties(ExtraXSNLO        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(NLO_SOURCES Logarithms.C
+                Dummy_QCD_Virtual.C
+                DY_QCD_Virtual.C
+                DY_Jet_QCD_Virtual.C
+                Higgs_QCD_Virtual.C
+                Higgs_Jet_QCD_Virtual.C
+                ee3jet_CSS_approx.C
+                ppll1jet_CSS_approx.C
+                epe2jet_CSS_approx.C)
+
+set(NLO_HEADERS Logarithms.H)
+
+sherpa_create_git_info(NLO)
+ 
+add_library(ExtraXSNLO SHARED ${NLO_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(ExtraXSNLO ExtraXSNLO)
+>>>>>>> upstream/master

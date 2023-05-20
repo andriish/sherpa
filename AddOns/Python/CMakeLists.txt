@@ -1,5 +1,14 @@
+<<<<<<< HEAD
 find_program(SWIG NAMES swig  REQUIRED)
 message(STATUS "SHERPA Python: SWIG=${SWIG}")
+=======
+find_program(SWIG NAMES swig  PATHS ${SWIG_DIR} PATH_SUFFIXES bin REQUIRED)
+if (SWIG)
+ message(STATUS "SHERPA: SWIG=${SWIG}")
+else()
+ message(FATAL_ERROR "SHERPA: SWIG NOT FOUND!")
+endif()
+>>>>>>> upstream/master
 set( PYEXTFILES_GEN
     Sherpa.i 
     Exception.i 
@@ -17,6 +26,10 @@ set( PYEXTFILES_GEN
 
 set(PYTHONSRC)
 foreach( file_i ${PYEXTFILES_GEN})
+<<<<<<< HEAD
+=======
+  if ( NOT ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}") )
+>>>>>>> upstream/master
     add_custom_command(
     PRE_BUILD
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file_i}
@@ -24,7 +37,12 @@ foreach( file_i ${PYEXTFILES_GEN})
     ARGS -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${file_i} ${CMAKE_CURRENT_BINARY_DIR}/${file_i}
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${file_i}
     )
+<<<<<<< HEAD
     list( APPEND PYTHONSRC ${CMAKE_CURRENT_BINARY_DIR}/${file_i})
+=======
+  endif()
+  list( APPEND PYTHONSRC ${CMAKE_CURRENT_BINARY_DIR}/${file_i})
+>>>>>>> upstream/master
 endforeach( file_i )
 add_custom_command(
        OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/Sherpa_wrap.cxx
@@ -33,20 +51,37 @@ add_custom_command(
        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
        VERBATIM)
 Python_add_library(_Sherpa MODULE  ${CMAKE_CURRENT_BINARY_DIR}/Sherpa_wrap.cxx    )
+<<<<<<< HEAD
+=======
+target_compile_features(_Sherpa PRIVATE cxx_std_11)
+>>>>>>> upstream/master
 set_target_properties(_Sherpa   PROPERTIES      ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/$<0:>
                                                LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/$<0:>
                                                RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/$<0:>
                                                )
+<<<<<<< HEAD
 target_include_directories(_Sherpa PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/ )
+=======
+target_include_directories(_Sherpa PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/ ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
+>>>>>>> upstream/master
 install(TARGETS _Sherpa DESTINATION ${SHERPA_Python_SITEARCH}/  COMPONENT python)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Sherpa.py DESTINATION ${SHERPA_Python_SITEARCH}/  COMPONENT python)
 
 add_library(MEProcess SHARED MEProcess.C)
+<<<<<<< HEAD
+=======
+target_compile_features(MEProcess PRIVATE cxx_std_11)
+target_include_directories(MEProcess PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/ ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
+>>>>>>> upstream/master
 install(TARGETS MEProcess DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(MEProcess       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME MEProcess SOVERSION 0.0.0)
 set_target_properties(MEProcess       PROPERTIES DEFINE_SYMBOL "")
 
+<<<<<<< HEAD
 set(PYLIBDIR ${SHERPA_Python_SITEARCH})
 configure_file(${PROJECT_SOURCE_DIR}//Examples/API/Events/test.py.in ${PROJECT_SOURCE_DIR}//Examples/API/Events/test.py  @ONLY)
 configure_file(${PROJECT_SOURCE_DIR}//Examples/API/ME2-Python/test.py.in ${PROJECT_SOURCE_DIR}//Examples/API/ME2-Python/test.py @ONLY)
 configure_file(${PROJECT_SOURCE_DIR}//Examples/API/MPIEvents/test.py.in ${PROJECT_SOURCE_DIR}//Examples/API/MPIEvents/test.py @ONLY)
+=======
+target_link_libraries(_Sherpa PRIVATE SHERPA::All MEProcess)
+>>>>>>> upstream/master

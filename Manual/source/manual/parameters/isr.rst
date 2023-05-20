@@ -6,8 +6,6 @@ ISR parameters
 
 .. index:: BUNCH_1
 .. index:: BUNCH_2
-.. index:: ISR_SMIN
-.. index:: ISR_SMAX
 .. index:: ISR_E_ORDER
 .. index:: ISR_E_SCHEME
 .. index:: PDF_LIBRARY
@@ -34,14 +32,6 @@ initial state radiation (ISR).
   Backscattering spectra are enabled the bunch particles would have to
   be set to 22, the PDG code of the photon.
 
-:OPTION:`ISR_SMIN/ISR_SMAX`
-  This parameter specifies the minimum fraction of cms energy squared
-  after ISR. The reference value is the total centre of mass energy
-  squared of the collision, `not` the centre of mass energy after
-  eventual Beamstrahlung.
-  The parameter can be specified using the internal interpreter, see
-  :ref:`Interpreter`, e.g. as ``ISR_SMIN: sqr(20/E_CMS)``.
-
 Sherpa provides access to a variety of structure functions.
 They can be configured with the following parameters.
 
@@ -50,38 +40,14 @@ They can be configured with the following parameters.
   following options are distributed with Sherpa:
 
   :option:`LHAPDFSherpa`
-    Use PDF's from LHAPDF :cite:`Buckley2011ms`.
+    Use PDF's from LHAPDF :cite:`Buckley2011ms`. This is the default.
 
   :option:`CT14Sherpa`
     Built-in library for some PDF sets from the CTEQ collaboration,
-    cf. :cite:`Dulat2015mca`. This is the default.
+    cf. :cite:`Dulat2015mca`.
 
-  :option:`CT12Sherpa`
-    Built-in library for some PDF sets from the CTEQ collaboration,
-    cf. :cite:`Gao2013xoa`.
-
-  :option:`CT10Sherpa`
-    Built-in library for some PDF sets from the CTEQ collaboration,
-    cf. :cite:`Lai2010vv`.
-
-  :option:`CTEQ6Sherpa`
-    Built-in library for some PDF sets from the CTEQ collaboration,
-    cf. :cite:`Nadolsky2008zw`.
-
-  :OPTION:`NNPDF30Sherpa`
+  :OPTION:`NNPDFSherpa`
     Built-in library for PDF sets from the NNPDF group, cf. :cite:`Ball2014uwa`.
-
-  :option:`MSTW08Sherpa`
-    Built-in library for PDF sets from the MSTW group, cf. :cite:`Martin2009iq`.
-
-  :option:`MRST04QEDSherpa`
-    Built-in library for photon PDF sets from the MRST group, cf. :cite:`Martin2004dh`.
-
-  :option:`MRST01LOSherpa`
-    Built-in library for the 2001 leading-order PDF set from the MRST group, cf. :cite:`Martin2001es`.
-
-  :option:`MRST99Sherpa`
-    Built-in library for the 1999 PDF sets from the MRST group, cf. :cite:`Martin1999ww`.
 
   :option:`GRVSherpa`
     Built-in library for the GRV photon PDF :cite:`Gluck1991jc`, :cite:`Gluck1991ee`.
@@ -109,6 +75,16 @@ They can be configured with the following parameters.
   Furthermore it is simple to build an external interface to an
   arbitrary PDF and load that dynamically in the Sherpa run. See
   :ref:`External PDF` for instructions.
+
+  By default, Sherpa will try to install with the LHAPDF interface enabled.
+  If this is not desired, for example in lepton-lepton collisions
+  where LHAPDF is not used, the user can disable the interface
+  with the cmake option ``-DCMAKE_ENABLE_LHAPDF=OFF``.
+  Sherpa will then use the internal :OPTION:`PDF_LIBRARY` for
+  hadronic collisions, with the default set being
+  ``NNPDF31_nnlo_as_0118_mc``. Note that PDF variations
+  and the evolution of ALPHAS, ``ALPHAS: {USE_PDF: 1}``,
+  can only be used with LHAPDF enabled.
 
 :OPTION:`PDF_SET`
   Specifies the PDF set for hadronic bunch particles. All

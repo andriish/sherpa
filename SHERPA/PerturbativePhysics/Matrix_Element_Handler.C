@@ -57,7 +57,9 @@ void Matrix_Element_Handler::RegisterDefaults()
     .SetDefault(1)
     .SetReplacementList(hls::HelicitySchemeTags());
 
+  s["NLO_SUBTRACTION_MODE"].SetDefault("QCD");
   s["NLO_IMODE"].SetDefault("IKP");
+  s["NLO_MUR_COEFFICIENT_FROM_VIRTUAL"].SetDefault(true);
 
   s["PSI"]["ASYNC"].SetDefault(false);
 }
@@ -150,73 +152,21 @@ void Matrix_Element_Handler::InitNLOMC()
   p_nlomc = NLOMC_Getter::GetObject(nlomc,NLOMC_Key(p_model,p_isr));
 }
 
-#ifdef USING__Threading
-void *Matrix_Element_Handler::TCalculateTotalXSecs(void *arg)
-{
-  MEH_TID *tid((MEH_TID*)arg);
-  pthread_cond_wait(&tid->m_s_cnd,&tid->m_s_mtx);
-  tid->p_proc->SetLookUp(true);
-  tid->p_proc->CalculateTotalXSec(tid->m_respath,false);
-  tid->p_proc->SetLookUp(false);
-  tid->p_proc->Integrator()->SetUpEnhance();
-  tid->p_next->p_prev=tid->p_prev;
-  tid->p_prev->p_next=tid->p_next;
-  if (tid->p_next==tid) pthread_cond_signal(tid->p_t_cnd,tid->p_t_mtx);
-  else pthread_cond_signal(&tid->p_next->m_s_cnd,&tid->p_next->m_s_mtx);
-  return NULL;
-}
-#endif
 
 bool Matrix_Element_Handler::CalculateTotalXSecs() 
 {
   Settings& s = Settings::GetMainSettings();
-#ifdef USING__Threading
-  bool async = s["PSI"]["ASYNC"].Get<bool>();
-#endif
   bool storeresults = s["GENERATE_RESULT_DIRECTORY"].Get<bool>();
   if (storeresults) {
     My_In_File::OpenDB(m_respath+"/");
   }
   bool okay(true);
-#ifndef USING__Threading
   for (size_t i=0;i<m_procs.size();++i) {
     m_procs[i]->SetLookUp(true);
     if (!m_procs[i]->CalculateTotalXSec(m_respath,false)) okay=false;
     m_procs[i]->SetLookUp(false);
     m_procs[i]->Integrator()->SetUpEnhance();
   }
-#else
-  pthread_mutex_t t_mtx;
-  pthread_cond_t t_cnd;
-  pthread_cond_init(&t_cnd,NULL);
-  pthread_mutex_init(&t_mtx,NULL);
-  pthread_mutex_lock(&t_mtx);
-  MEH_TID_Vector cts;
-  for (size_t i(0);i<m_procs.size();++i)
-    m_procs[i]->AddMEHThread(cts,&Matrix_Element_Handler::TCalculateTotalXSecs);
-  async = async && (cts.size() > 1);
-  for (size_t i(0);i<cts.size();++i) {
-    cts[i]->m_respath=m_respath;
-    cts[i]->p_t_mtx=&t_mtx;
-    cts[i]->p_t_cnd=&t_cnd;
-    if (async) cts[i]->m_r=1;
-  }
-  pthread_cond_signal(&cts.front()->m_s_cnd,&cts.front()->m_s_mtx);
-  pthread_cond_wait(&t_cnd,&t_mtx);
-  for (size_t i(0);i<cts.size();++i) {
-    MEH_TID *tid(cts[i]);
-    if (pthread_join(tid->m_id,NULL))
-      THROW(fatal_error,"Cannot join thread "+ToString(i));
-    pthread_mutex_unlock(&tid->m_s_mtx);
-    pthread_mutex_unlock(&tid->m_r_mtx);
-    pthread_mutex_destroy(&tid->m_s_mtx);
-    pthread_mutex_destroy(&tid->m_r_mtx);
-    pthread_cond_destroy(&tid->m_s_cnd);
-  }
-  pthread_mutex_unlock(&t_mtx);
-  pthread_mutex_destroy(&t_mtx);
-  pthread_cond_destroy(&t_cnd);
-#endif
   if (storeresults) My_In_File::CloseDB(m_respath+"/");
   return okay;
 }
@@ -497,21 +447,38 @@ std::vector<Process_Base*> Matrix_Element_Handler::InitializeSingleProcess
 	m_procs.back()->FillProcessMap(pmap);
       }
       if (m_fosettings==0) {
-        Settings& s = Settings::GetMainSettings();
+        // since we are in Fixed_Order NLO mode, ensure that we generate
+        // parton-level events only, disabling physics beyond that
+
+        // remember we did this
 	m_fosettings=1;
+
+        Settings& s = Settings::GetMainSettings();
+
+        // disable showering, fragmentation and multiple interactions
 	if (p_shower->GetShower())
 	  p_shower->GetShower()->SetOn(false);
         s["FRAGMENTATION"].OverrideScalar<std::string>("None");
         s["MI_HANDLER"].OverrideScalar<std::string>("None");
-        if (s["BEAM_REMNANTS"].GetScalarWithOtherDefault<std::string>("None") == "None") {
-          s["BEAM_REMNANTS"].OverrideScalar<bool>(false);
-        } else {
+
+        // we allow beam remnants to be enabled explicitly by the user
+        if (s["BEAM_REMNANTS"].IsSetExplicitly() &&
+            s["BEAM_REMNANTS"].Get<bool>()) {
+          // beam remnants are requested explicitly, but let us at least disable
+          // intrinsic k_perp
           Scoped_Settings kperp_settings{ s["INTRINSIC_KPERP"] };
           kperp_settings["MEAN"].OverrideScalar<double>(0.0);
           kperp_settings["SIGMA"].OverrideScalar<double>(0.0);
-	}
+        } else {
+          // if not requested explicitly, we turn it off, too
+          s["BEAM_REMNANTS"].OverrideScalar<bool>(false);
+        }
+
+        // we allow higher-order QED effects to be enabled explicitly by the
+        // user
         Scoped_Settings meqedsettings{ s["ME_QED"] };
         if (!meqedsettings["ENABLED"].IsSetExplicitly()) {
+          // if not requested explicitly, we turn it off, too
           meqedsettings["ENABLED"].OverrideScalar<bool>(false);
         }
       }
@@ -569,7 +536,7 @@ int Matrix_Element_Handler::InitializeProcesses(
 	    <<FormatTime(size_t(etime-btime))<<" )."<<std::endl;
   if (m_procs.empty() && m_gens.size()>0)
     THROW(normal_exit,"No hard process found");
-  msg_Info()<<METHOD<<"(): Performing tests"<<std::flush;
+  msg_Info()<<METHOD<<"(): Performing tests "<<std::flush;
   rbtime=retime;
   btime=etime;
   int res(m_gens.PerformTests());
@@ -624,9 +591,9 @@ void Matrix_Element_Handler::BuildProcesses()
 {
   Settings& s = Settings::GetMainSettings();
   // init processes
-  msg_Info()<<METHOD<<"(): Looking for processes "
-	    <<"["<<m_gens.size()<<" generators, "
-	    <<s["PROCESSES"].GetItems().size()<<" processes]"<<std::flush;
+  msg_Info()<<METHOD<<"(): "<<m_gens.size()<<" ME generators, "
+	    <<s["PROCESSES"].GetItems().size()<<" process blocks."<<std::endl;
+  msg_Info()<<METHOD<<"(): Setting up processes "<<std::flush;
   if (msg_LevelIsTracking()) msg_Info()<<"\n";
   if (!m_gens.empty() && s["PROCESSES"].GetItemsCount() == 0) {
     if (!msg_LevelIsTracking()) msg_Info()<<"\n";
@@ -640,14 +607,22 @@ void Matrix_Element_Handler::BuildProcesses()
 
   // iterate over processes in the settings
   for (auto& proc : s["PROCESSES"].GetItems()) {
-    const auto keys = proc.GetKeys();
-    if (keys.size() != 1) {
-      if (!msg_LevelIsTracking()) msg_Info()<<"\n";
+    std::string name;
+    if (proc.IsMap()) {
+      std::vector<std::string> keys {proc.GetKeys()};
+      if (keys.size() != 1) {
+        if (!msg_LevelIsTracking()) msg_Info()<<"\n";
+        THROW(invalid_input, std::string{"Invalid PROCESSES definition.\n\n"} +
+                                 Strings::ProcessesSyntaxExamples);
+      }
+      name = keys[0];
+    } else if (proc.IsScalar()) {
+      name = proc.GetScalarWithOtherDefault<std::string>("");
+    } else {
       THROW(invalid_input, std::string{"Invalid PROCESSES definition.\n\n"} +
                                Strings::ProcessesSyntaxExamples);
     }
-    auto procsettings = proc[keys[0]];
-    std::string name = keys[0];
+    Scoped_Settings procsettings {proc[name]};
     // tags are not automatically resolved in setting keys, hence let's do this
     // manually, to allow for tags within process specifications as e.g.
     // "93 93 -> 11 -11 93{$(NJET)}"

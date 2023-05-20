@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,12 @@ target_include_directories(CT14Sherpa PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS CT14Sherpa DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(CT14Sherpa        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME CT14Sherpa SOVERSION 0.0.0)
 set_target_properties(CT14Sherpa        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(CT14_SOURCES CT14Pdf.f
+                 CT14_Fortran_Interface.C)
+
+sherpa_create_git_info(CT14)
+ 
+add_library(CT14Sherpa SHARED ${CT14_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(CT14Sherpa CT14Sherpa)
+>>>>>>> upstream/master

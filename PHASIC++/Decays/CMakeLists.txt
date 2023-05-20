@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,17 @@ target_include_directories(PhasicDecays PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS PhasicDecays DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(PhasicDecays        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME PhasicDecays SOVERSION 0.0.0)
 set_target_properties(PhasicDecays        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Decays_SOURCES Decay_Channel.C
+                   Decay_Table.C
+                   Decay_Map.C)
+
+set(Decays_HEADERS Decay_Channel.H
+                   Decay_Table.H
+                   Decay_Map.H)
+
+sherpa_create_git_info(Decays)
+ 
+add_library(PhasicDecays SHARED ${Decays_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(PhasicDecays PhasicDecays)
+>>>>>>> upstream/master

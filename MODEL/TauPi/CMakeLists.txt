@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -23,3 +24,12 @@ target_include_directories(SherpaTauPi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS SherpaTauPi DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaTauPi        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaTauPi SOVERSION 0.0.0)
 set_target_properties(SherpaTauPi        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(TauPi_SOURCES TauPi_LC.C
+                  Model.C)
+
+sherpa_create_git_info(TauPi)
+ 
+add_library(SherpaTauPi SHARED ${TauPi_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(SherpaTauPi SherpaTauPi)
+>>>>>>> upstream/master

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -24,3 +25,14 @@ target_include_directories(SASGSherpa PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS SASGSherpa DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SASGSherpa        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SASGSherpa SOVERSION 0.0.0)
 set_target_properties(SASGSherpa        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(SASG_SOURCES sasgam2.f
+                 SASGph_Fortran_Interface.C)
+
+set(SASG_HEADERS SASGph_Fortran_Interface.H)
+
+sherpa_create_git_info(SASG)
+ 
+add_library(SASGSherpa SHARED ${SASG_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(SASGSherpa SASGSherpa)
+>>>>>>> upstream/master

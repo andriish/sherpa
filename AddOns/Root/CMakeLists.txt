@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Manually edited
 find_package(ROOT REQUIRED) 
 include(${ROOT_USE_FILE})
@@ -6,23 +7,38 @@ message(STATUS "SHERPA: ROOT_VERSION=${ROOT_VERSION} ROOT_LIBRARIES=${ROOT_LIBRA
 set(foo_SOURCES Output_RootNtuple.C RootNtuple_Reader.C)
 set(foo_HEADERS Output_RootNtuple.H RootNtuple_Reader.H) 
 
+=======
+
+set(foo_SOURCES Output_RootNtuple.C RootNtuple_Reader.C)
+set(foo_HEADERS Output_RootNtuple.H RootNtuple_Reader.H)
+>>>>>>> upstream/master
 set(SherpaRootOutput_SOURCES Output_RootNtuple.C)
 set(SherpaRootOutput_HEADERS Output_RootNtuple.H)
 set(SherpaRootInput_SOURCES RootNtuple_Reader.C)
 set(SherpaRootInput_HEADERS RootNtuple_Reader.H)
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master
 set(SherpaRootEOutput_SOURCES Output_RootNtuple.C)
 set(SherpaRootEOutput_HEADERS Output_RootNtuple.H)
 set(SherpaRootEInput_SOURCES RootNtuple_Reader.C)
 set(SherpaRootEInput_HEADERS RootNtuple_Reader.H)
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master
 set(SherpaRootEDOutput_SOURCES Output_RootNtuple.C)
 set(SherpaRootEDOutput_HEADERS Output_RootNtuple.H)
 set(SherpaRootEDInput_SOURCES RootNtuple_Reader.C)
 set(SherpaRootEDInput_HEADERS RootNtuple_Reader.H)
 
+<<<<<<< HEAD
 
 creategitinfo(foo ../Root/)
+=======
+sherpa_create_git_info(foo)
+>>>>>>> upstream/master
 list(TRANSFORM SherpaRootOutput_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/../Root/")
 list(APPEND SherpaRootOutput_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C)
 
@@ -41,6 +57,7 @@ list(APPEND SherpaRootEInput_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C)
 list(TRANSFORM SherpaRootEDInput_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/../Root/")
 list(APPEND SherpaRootEDInput_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C)
 
+<<<<<<< HEAD
 
 add_library(SherpaRootOutput SHARED ${SherpaRootOutput_SOURCES})
 target_link_libraries(SherpaRootOutput PRIVATE ${ROOT_LIBRARIES})
@@ -48,44 +65,74 @@ target_include_directories(SherpaRootOutput PRIVATE ${ROOT_INCLUDE_DIRS})
 install(TARGETS SherpaRootOutput DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaRootOutput       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaRootOutput SOVERSION 0.0.0)
 set_target_properties(SherpaRootOutput       PROPERTIES DEFINE_SYMBOL "")
+=======
+add_library(SherpaRootOutput SHARED ${SherpaRootOutput_SOURCES})
+target_link_libraries(SherpaRootOutput PRIVATE ${ROOT_LIBRARIES})
+target_include_directories(SherpaRootOutput PRIVATE ${ROOT_INCLUDE_DIRS})
+sherpa_handle_shared_library(SherpaRootOutput SherpaRootOutput)
+>>>>>>> upstream/master
 
 add_library(SherpaERootOutput SHARED ${SherpaRootEOutput_SOURCES})
 target_link_libraries(SherpaERootOutput PRIVATE ${ROOT_LIBRARIES})
 target_include_directories(SherpaERootOutput PRIVATE ${ROOT_INCLUDE_DIRS})
+<<<<<<< HEAD
 install(TARGETS SherpaERootOutput DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaERootOutput       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaERootOutput SOVERSION 0.0.0)
 set_target_properties(SherpaERootOutput       PROPERTIES DEFINE_SYMBOL "")
+=======
+sherpa_handle_shared_library(SherpaERootOutput SherpaERootOutput)
+>>>>>>> upstream/master
 
 add_library(SherpaEDRootOutput SHARED ${SherpaRootEDOutput_SOURCES})
 target_link_libraries(SherpaEDRootOutput PRIVATE ${ROOT_LIBRARIES})
 target_include_directories(SherpaEDRootOutput PRIVATE ${ROOT_INCLUDE_DIRS})
+<<<<<<< HEAD
 install(TARGETS SherpaEDRootOutput DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaEDRootOutput       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaEDRootOutput SOVERSION 0.0.0)
 set_target_properties(SherpaEDRootOutput       PROPERTIES DEFINE_SYMBOL "")
+=======
+sherpa_handle_shared_library(SherpaEDRootOutput SherpaEDRootOutput)
+>>>>>>> upstream/master
 
 add_library(SherpaRootInput SHARED ${SherpaRootInput_SOURCES})
 target_link_libraries(SherpaRootInput PRIVATE ${ROOT_LIBRARIES})
 target_include_directories(SherpaRootInput PRIVATE ${ROOT_INCLUDE_DIRS})
+<<<<<<< HEAD
 install(TARGETS SherpaRootInput DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaRootInput       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaRootInput SOVERSION 0.0.0)
 set_target_properties(SherpaRootInput       PROPERTIES DEFINE_SYMBOL "")
+=======
+sherpa_handle_shared_library(SherpaRootInput SherpaRootInput)
+>>>>>>> upstream/master
 
 add_library(SherpaERootInput SHARED ${SherpaRootEInput_SOURCES})
 target_link_libraries(SherpaERootInput PRIVATE ${ROOT_LIBRARIES})
 target_include_directories(SherpaERootInput PRIVATE ${ROOT_INCLUDE_DIRS})
+<<<<<<< HEAD
 install(TARGETS SherpaERootInput DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaERootInput       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaERootInput SOVERSION 0.0.0)
 set_target_properties(SherpaERootInput       PROPERTIES DEFINE_SYMBOL "")
+=======
+sherpa_handle_shared_library(SherpaERootInput SherpaERootInput)
+>>>>>>> upstream/master
 
 add_library(SherpaEDRootInput SHARED ${SherpaRootEDInput_SOURCES})
 target_link_libraries(SherpaEDRootInput PRIVATE ${ROOT_LIBRARIES})
 target_include_directories(SherpaEDRootInput PRIVATE ${ROOT_INCLUDE_DIRS})
+<<<<<<< HEAD
 install(TARGETS SherpaEDRootInput DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(SherpaEDRootInput       PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME SherpaEDRootInput SOVERSION 0.0.0)
 set_target_properties(SherpaEDRootInput       PROPERTIES DEFINE_SYMBOL "")
 
 #Warning: The ROOT_CXX_FLAGS might be incompatible with the current compiller
 string(REPLACE " " ";" ROOT_CXX_FLAGS_LIST ${ROOT_CXX_FLAGS})
+=======
+sherpa_handle_shared_library(SherpaEDRootInput SherpaEDRootInput)
+
+include(CheckCXXCompilerFlag)
+string(REPLACE " " ";" ROOT_CXX_FLAGS_LIST ${ROOT_CXX_FLAGS})
+list(REMOVE_ITEM ROOT_CXX_FLAGS_LIST "-stdlib=libc++")
+>>>>>>> upstream/master
 foreach(fl ${ROOT_CXX_FLAGS_LIST})
   CHECK_CXX_COMPILER_FLAG(${fl} COMPILER_SUPPORTS_${fl})
   if(COMPILER_SUPPORTS_${fl})
@@ -99,4 +146,7 @@ foreach(fl ${ROOT_CXX_FLAGS_LIST})
     target_compile_options(SherpaEDRootInput  PRIVATE ${fl})
   endif()
 endforeach()
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master

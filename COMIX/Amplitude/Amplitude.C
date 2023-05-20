@@ -41,6 +41,7 @@ Amplitude::Amplitude():
   Settings& s = Settings::GetMainSettings();
   Scoped_Settings comixsettings{ s["COMIX"] };
   m_sccmur = s["USR_WGT_MODE"].Get<bool>();
+  m_murcoeffvirt = s["NLO_MUR_COEFFICIENT_FROM_VIRTUAL"].Get<bool>();
   p_dinfo->SetType(0);
   p_dinfo->SetMassive(0);
   m_pmode = comixsettings["PMODE"].Get<std::string>()[0];
@@ -62,9 +63,9 @@ Amplitude::Amplitude():
   p_dinfo->SetNf(s["DIPOLES"]["NF_GSPLIT"].Get<int>());
   p_dinfo->SetKT2Max(s["DIPOLES"]["KT2MAX"].Get<double>());
   p_dinfo->SetDRMode(0);
-  const int subtype{ s["NLO_SUBTRACTION_SCHEME"].Get<int>() };
+  const subscheme::code subtype{ s["DIPOLES"]["SCHEME"].Get<subscheme::code>() };
   p_dinfo->SetSubType(subtype);
-  if (subtype==1) p_dinfo->SetKappa(1.0);
+  if (subtype==subscheme::Dire) p_dinfo->SetKappa(1.0);
   m_smth=GetParameter<double>("NLO_SMEAR_THRESHOLD");
   m_smpow=GetParameter<double>("NLO_SMEAR_POWER");
 }
@@ -1160,24 +1161,24 @@ void Amplitude::SetCouplings() const
 #ifdef DEBUG__CF
   msg_Debugging()<<METHOD<<"(): {\n";
 #endif
-  MODEL::Coupling_Data *aqcd(m_cpls.front().p_aqcd);
-  MODEL::Coupling_Data *aqed(m_cpls.front().p_aqed);
-  double gsfac(aqcd?sqrt(aqcd->Factor()):1.0);
-  double gwfac(aqed?sqrt(aqed->Factor()):1.0);
   for (size_t i(0);i<m_cpls.size();++i) {
+    MODEL::Coupling_Data *aqcd(m_cpls[i].p_aqcd);
+    MODEL::Coupling_Data *aqed(m_cpls[i].p_aqed);
+    double gsfac(aqcd?sqrt(aqcd->Factor()):1.0);
+    double gwfac(aqed?sqrt(aqed->Factor()):1.0);
     double fac(1.0);
     Vertex *v(m_cpls[i].p_v);
     size_t oqcd(m_cpls[i].m_oqcd), oew(m_cpls[i].m_oew);
     if (aqcd && oqcd) {
 #ifdef DEBUG__CF
-      msg_Debugging()<<"  qcd: "<<sqrt(aqcd->Factor())<<" ^ "<<oqcd
+      msg_Debugging()<<"  qcd: "<<aqcd->Factor()<<" ^ "<<oqcd/2.
 		     <<" = "<<intpow(gsfac,oqcd)<<"\n";
 #endif
       fac*=intpow(gsfac,oqcd);
     }
     if (aqed && oew) {
 #ifdef DEBUG__CF
-      msg_Debugging()<<"  qed: "<<sqrt(aqed->Factor())<<" ^ "<<oew
+      msg_Debugging()<<"  qed: "<<aqed->Factor()<<" ^ "<<oew/2.
 		     <<" = "<<intpow(gwfac,oew)<<"\n";
 #endif
       fac*=intpow(gwfac,oew);
@@ -1559,14 +1560,21 @@ bool Amplitude::EvaluateAll(const bool& mode)
 		     <<(e1p/e1l-1.0)<<".\n";
       }
       csum+=cw*asf*p_loop->ME_Finite();
-      if (m_sccmur) {
-	double b0(11.0/6.0*3.0-2.0/3.0*0.5*Flavour(kf_quark).Size()/2);
-	m_cmur[0]+=cw*asf*(p_loop->ME_E1()+m_maxcpl[0]/2*b0);
-	m_cmur[1]+=cw*asf*p_loop->ME_E2();
+      if (m_murcoeffvirt && p_loop->ProvidesPoles()) {
+        if (m_sccmur) {
+          double b0(11.0/6.0*3.0-2.0/3.0*0.5*Flavour(kf_quark).Size()/2.);
+          m_cmur[0]+=cw*asf*(p_loop->ME_E1()+m_maxcpl[0]/2.*b0);
+          m_cmur[1]+=cw*asf*p_loop->ME_E2();
+        }
+        else {
+          m_cmur[0]+=cw*asf*p_loop->ScaleDependenceCoefficient(1);
+          m_cmur[1]+=cw*asf*p_loop->ScaleDependenceCoefficient(2);
+        }
       }
       else {
-	m_cmur[0]+=cw*asf*p_loop->ScaleDependenceCoefficient(1);
-	m_cmur[1]+=cw*asf*p_loop->ScaleDependenceCoefficient(2);
+	double b0(11.0/6.0*3.0-2.0/3.0*0.5*Flavour(kf_quark).Size()/2.);
+        m_cmur[0]=cw*asf*m_maxcpl[0]/2.*b0;
+        m_cmur[1]=0.;
       }
     }
     if (!(p_dinfo->Mode()&4)) {

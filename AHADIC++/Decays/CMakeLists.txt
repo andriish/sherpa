@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ########################################################################
 #  Automatically or semiautomaticaly generated, do not edit.
@@ -25,3 +26,15 @@ target_include_directories(AhadicDecays PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS AhadicDecays DESTINATION ${CMAKE_INSTALL_LIBDIR}/SHERPA-MC COMPONENT libs)
 set_target_properties(AhadicDecays        PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME AhadicDecays SOVERSION 0.0.0)
 set_target_properties(AhadicDecays        PROPERTIES DEFINE_SYMBOL "")
+=======
+set(Decays_SOURCES Cluster_Decayer.C
+                   Cluster_Splitter.C)
+
+set(Decays_HEADERS Cluster_Decayer.H
+                   Cluster_Splitter.H)
+
+sherpa_create_git_info(Decays)
+ 
+add_library(AhadicDecays SHARED ${Decays_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
+sherpa_handle_shared_library(AhadicDecays AhadicDecays)
+>>>>>>> upstream/master
