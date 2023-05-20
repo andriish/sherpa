@@ -18,7 +18,9 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <sys/time.h>
+#if defined(ARCH_LINUX) || defined(ARCH_UNIX)
 #include <sys/resource.h>
+#endif
 #include <sys/types.h>
 #ifdef ARCH_DARWIN
 #include <sys/sysctl.h>
