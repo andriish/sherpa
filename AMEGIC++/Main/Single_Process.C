@@ -625,7 +625,9 @@ void AMEGIC::Single_Process::WriteLibrary()
 	 rpa->gen.Variable("SHERPA_CPP_PATH")+"/makelibs");
   msg_Info()<<"AMEGIC::Single_Process::WriteLibrary : "<<std::endl
 	    <<"   Library for "<<m_name<<" has been written, name is "<<m_libname<<std::endl;
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
   sync();
+#endif
 }
 
 void AMEGIC::Single_Process::CreateMappingFile(Single_Process* partner) {
