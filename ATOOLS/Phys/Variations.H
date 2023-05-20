@@ -49,7 +49,7 @@ namespace ATOOLS {
       QCUT            = 1<<3
     };
   };
-  DEFINE_ENUM_FLAG_OPERATORS(ScaleFactorExpansions::code)
+  DEFINE_SHERPA_ENUM_FLAG_OPERATORS(ScaleFactorExpansions::code)
 
   //! Initialise and hold all information that is needed for varying input parameters
   class Variations {
