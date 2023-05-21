@@ -38,7 +38,10 @@ bool Library_Loader::CreateLockFile(const std::string &lockname)
 	      <<"'. Waiting for unlock ...          "<<std::flush;
     size_t check(1), i(0);
     for (i=0;i<m_wait;i+=check) {
+#if defined(__linux__) || defined(__darwin__) || defined(__APPLE__) || defined(BSD) || defined(__sun)
+
       sleep(check);
+@endif
       msg_Info()<<mm(9,mm::left)<<std::setw(6)<<i<<" s "<<std::flush;
       if (stat(lockname.c_str(),&buffer)) break;
     }
@@ -72,7 +75,10 @@ void Library_Loader::UnloadLibrary(const std::string &name,void *module)
 {
   std::map<std::string,void*>::iterator lit(m_libs.find(name));
   if (lit!=m_libs.end()) m_libs.erase(lit);
+#if defined(__linux__) || defined(__darwin__) || defined(__APPLE__) || defined(BSD) || defined(__sun)
+
   dlclose(module);
+#endif
 }
 
 bool Library_Loader::LibraryIsLoaded(const std::string &name)
