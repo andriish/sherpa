@@ -22,7 +22,7 @@
 #include "ATOOLS/Org/MyStrStream.H"
 #include "ATOOLS/Org/Exception.H"
 #include "ATOOLS/Org/Scoped_Settings.H"
-
+#undef GetObject
 namespace PHASIC {
 
   class MEPS_Scale_Setter: public Scale_Setter_Base {

@@ -30,7 +30,7 @@
 #include <cassert>
 #include <unistd.h>
 #include <cctype>
-
+#undef GetObject
 using namespace SHERPA;
 using namespace PHASIC;
 using namespace PDF;

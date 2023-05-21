@@ -10,7 +10,7 @@
 #include "ATOOLS/Org/Exception.H"
 #include "ATOOLS/Org/Message.H"
 #include "ATOOLS/Org/Scoped_Settings.H"
-
+#undef GetObject
 namespace PHASIC {
 
   class Variable_Scale_Setter: public Scale_Setter_Base {

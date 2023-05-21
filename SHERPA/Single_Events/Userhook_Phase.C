@@ -8,7 +8,7 @@
 #include "ATOOLS/Org/Scoped_Settings.H"
 
 #include <limits>
-
+#undef GetObject
 using namespace SHERPA;
 using namespace ATOOLS;
 

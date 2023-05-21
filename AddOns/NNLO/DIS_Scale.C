@@ -22,7 +22,7 @@
 #include "ATOOLS/Org/MyStrStream.H"
 #include "ATOOLS/Org/Exception.H"
 #include "ATOOLS/Org/Scoped_Settings.H"
-
+#undef GetObject
 namespace SHNNLO {
 
   class DIS_Scale: public PHASIC::Scale_Setter_Base {
