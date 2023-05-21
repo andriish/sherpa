@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <string>
-
+#undef LoadLibrary 
 namespace ATOOLS {
 
   class Library_Loader {

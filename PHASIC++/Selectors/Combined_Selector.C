@@ -42,14 +42,14 @@ bool Combined_Selector::Initialize(const Selector_Key &key)
     Selector_Key subkey;
     subkey.m_settings = s;
     subkey.p_proc = p_proc;
-    auto* sel = Selector_Getter::GetObject(name, subkey);
-    if (sel) {
-      m_sels.push_back(sel);
-      msg_Debugging() << "new Selector_Base(\"" << name << "\")\n";
-    } else {
-      msg_Out()<<endl;
-      THROW(fatal_error, "Did not find selector \"" + name + "\".");
-    }
+//FIXME      auto* sel = Selector_Getter::GetObject(name, subkey);
+//FIXME      if (sel) {
+//FIXME        m_sels.push_back(sel);
+//FIXME        msg_Debugging() << "new Selector_Base(\"" << name << "\")\n";
+//FIXME      } else {
+//FIXME        msg_Out()<<endl;
+//FIXME        THROW(fatal_error, "Did not find selector \"" + name + "\".");
+//FIXME      }
   }
   return true;
 }

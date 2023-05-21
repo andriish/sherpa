@@ -15,6 +15,7 @@
 #include <iomanip>
 #include <assert.h>
 #undef interface 
+#undef LoadLibrary 
 using namespace ATOOLS;
 
 Library_Loader *ATOOLS::s_loader(NULL);
