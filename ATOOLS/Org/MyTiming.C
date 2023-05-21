@@ -27,7 +27,9 @@ std::string FormatTime(const int &intime,const int mode)
 
 MyTiming::MyTiming()
 {
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
   clk_tck=sysconf(_SC_CLK_TCK);
+#endif
   status=3; //never started or stopped 
 }
 

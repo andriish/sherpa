@@ -8,8 +8,8 @@ using namespace SHERPA;
 using namespace ATOOLS;
 using namespace std;
 
-Pythia_HepEvt_Translator::Pythia_HepEvt_Translator(HepEvt_Interface * interface) :
-  p_interface(interface), p_blobs(NULL)
+Pythia_HepEvt_Translator::Pythia_HepEvt_Translator(HepEvt_Interface * interfacex) :
+  p_interface(interfacex), p_blobs(NULL)
 {}
 
 bool Pythia_HepEvt_Translator::ConstructBlobs(ATOOLS::Blob_List * const blobs)

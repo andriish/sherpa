@@ -28,9 +28,9 @@ namespace SHERPA {
 
     void Reset();
     void Update(ATOOLS::Blob *,const size_t,
-                Perturbative_Interface *interface);
+                Perturbative_Interface *interfacex);
     bool DefineInitialConditions(const ATOOLS::Blob *,const ATOOLS::Blob_List *,
-                                 Perturbative_Interface *interface);
+                                 Perturbative_Interface *interfacex);
     bool AftermathOfNoShower(ATOOLS::Blob *,ATOOLS::Blob_List *);
     bool AftermathOfSuccessfulShower(ATOOLS::Blob *,ATOOLS::Blob_List *,
 				     Perturbative_Interface *);

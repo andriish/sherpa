@@ -16,7 +16,7 @@
 #include <stdio.h>
 #endif
 #else
-#warning "Cannot define getPeakRSS( ) or getCurrentRSS( ) for an unknown OS."
+// "Cannot define getPeakRSS( ) or getCurrentRSS( ) for an unknown OS."
 #endif
 
 size_t ATOOLS::GetPeakRSS( )
