@@ -147,6 +147,7 @@ if (MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" )
 #Memory problem and false positive warnings.
   include_directories(${PROJECT_SOURCE_DIR}/SherpaWindows)
   set(CXX_CXX_FLAGS_TO_CHECK "/bigobj" "/D_CRT_SECURE_NO_WARNINGS" "/DWIN32_LEAN_AND_MEAN" "/DNOMINMAX" "/DM_PI=3.141592" "/DM_E=2.7" 
+       "/wd4273" 
        "/wd4305" 
        "/wd4717" 
        "/wd4834" 

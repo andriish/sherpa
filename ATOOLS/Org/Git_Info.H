@@ -21,7 +21,7 @@ namespace ATOOLS {
 	     const std::string &branch,
 	     const std::string &revision,
 	     const std::string &checksum);
-    ~Git_Info(){};
+    ~Git_Info();
 
     inline const std::string &Name() const     { return m_name;     }
     inline const std::string &Branch() const   { return m_branch;   }
