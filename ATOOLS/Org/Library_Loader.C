@@ -41,7 +41,7 @@ bool Library_Loader::CreateLockFile(const std::string &lockname)
 #if defined(__linux__) || defined(__darwin__) || defined(__APPLE__) || defined(BSD) || defined(__sun)
 
       sleep(check);
-@endif
+#endif
       msg_Info()<<mm(9,mm::left)<<std::setw(6)<<i<<" s "<<std::flush;
       if (stat(lockname.c_str(),&buffer)) break;
     }
