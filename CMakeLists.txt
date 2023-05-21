@@ -314,9 +314,9 @@ macro(sherpa_handle_shared_library  mylib mylibname)
        target_link_libraries(${mylib} PRIVATE MPI::MPI_Fortran)
      endif()
   endif()
-  if ( ( MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" ) AND NOT (${mylib} MATCHES "ToolsOrg" ) )
-    target_link_libraries(${mylib} PRIVATE ToolsOrg)
-  endif()
+#  if ( ( MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" ) AND NOT (${mylib} MATCHES "ToolsOrg" ) )
+#    target_link_libraries(${mylib} PRIVATE ToolsOrg)
+#  endif()
   target_include_directories(${mylib} PUBLIC 
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>

@@ -9,6 +9,7 @@
 #include "ATOOLS/Org/Scoped_Settings.H"
 #include "ATOOLS/Org/Data_Reader.H"
 #undef GetObject
+#undef LoadLibrary
 using namespace PHASIC;
 using namespace ATOOLS;
 

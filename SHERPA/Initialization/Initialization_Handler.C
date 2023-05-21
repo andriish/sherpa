@@ -324,7 +324,7 @@ Initialization_Handler::~Initialization_Handler()
   for (set<string>::iterator pdflib=m_pdflibs.begin(); pdflib!=m_pdflibs.end();
        ++pdflib) {
     if (*pdflib=="None") continue;
-    void *exit(s_loader->GetLibraryFunction(*pdflib,"ExitPDFLib"));
+    void *exit(s_loader->GetLibraryFunction(*pdflib,std::string("ExitPDFLib")));
     if (exit==NULL)
       PRINT_INFO("Error: Cannot unload PDF library "+*pdflib);
     else ((PDF_Exit_Function)exit)();
@@ -722,7 +722,7 @@ bool Initialization_Handler::InitializeThePDFs()
         THROW(fatal_error, "LHAPDF has not been enabled during configuration.")
       #endif
     }
-    void *init(s_loader->GetLibraryFunction(*pdflib,"InitPDFLib"));
+    void *init(s_loader->GetLibraryFunction(*pdflib,std::string("InitPDFLib")));
     if (init==NULL) THROW(fatal_error,"Cannot load PDF library "+*pdflib);
     ((PDF_Init_Function)init)();
   }
