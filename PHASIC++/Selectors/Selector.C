@@ -95,9 +95,10 @@ void Selector_Base::ReadInSubSelectors(const Selector_Key &key)
               " and the value is another mapping for the selector settings.");
       type = s.GetKeys().front();
     }
-    auto* sel = Selector_Getter::GetObject(type, subkey);
-    if (sel!=NULL) m_sels.push_back(sel);
-    else THROW(fatal_error, "Did not find selector \""+type+"\".");
+//FIXME    
+//FIXME    auto* sel = Selector_Getter::GetObject(type, subkey);
+//FIXME    if (sel!=NULL) m_sels.push_back(sel);
+//FIXME    else THROW(fatal_error, "Did not find selector \""+type+"\".");
   }
 }
 
