@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cassert>
+#undef GetObject
 
 using namespace COMIX;
 using namespace ATOOLS;
