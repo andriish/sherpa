@@ -122,13 +122,15 @@ PrintGetterInfo(std::ostream &str,const size_t width, const std::string &indent,
 }
 
 template<class ObjectType,class ParameterType,class SortCriterion>
-ObjectType *Getter_Function<ObjectType,ParameterType,SortCriterion>::GetObject(const Parameter_Type &parameters) const
+ObjectType *Getter_Function<ObjectType,ParameterType,SortCriterion>::
+GetObject(const Parameter_Type &parameters) const
 {
   return (*this)(parameters);
 }
 
 template<class ObjectType,class ParameterType,class SortCriterion>
-ObjectType *Getter_Function<ObjectType,ParameterType,SortCriterion>::GetObject(const std::string &name,const Parameter_Type &parameters)
+ObjectType *Getter_Function<ObjectType,ParameterType,SortCriterion>::
+GetObject(const std::string &name,const Parameter_Type &parameters)
 {
   if (s_getters==NULL) return NULL;
   if (!s_exactmatch) {

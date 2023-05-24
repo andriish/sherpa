@@ -235,6 +235,7 @@ void Run_Parameter::Init()
   if (gethostname(hn,32)) gen.m_hostname="<unknown host>";
   else gen.m_hostname=std::string(hn);
 #endif
+
   // initialise output
   std::string color = s["PRETTY_PRINT"].Get<std::string>();
   if (color=="Off") msg->SetModifiable(false);
