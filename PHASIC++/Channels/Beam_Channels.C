@@ -136,7 +136,7 @@ void Beam_Channels::CheckForStructuresFromME() {
     p_psh->FSRIntegrator()->ISRInfo(i, types[i], masses[i], widths[i]);
   }
   p_psh->FSRIntegrator()->ISRInfo(types, masses, widths);
-  bool onshellresonance(false), fromFSR(false);
+  bool fromFSR(false);
   for (size_t i = 0; i < types.size(); i++) {
     channel_type::code type = channel_type::code(abs(types[i]));
     switch (type) {
@@ -147,9 +147,9 @@ void Beam_Channels::CheckForStructuresFromME() {
         break;
       case channel_type::resonance:
         if (ATOOLS::IsZero(masses[i])) continue;
+        if (ATOOLS::IsZero(widths[i])) continue;
         if (types[i] == -1) {
           p_psh->SetOSMass(masses[i]);
-          onshellresonance = true;
         }
         fromFSR = true;
         m_beamparams.push_back(Channel_Info(type, masses[i], widths[i]));
@@ -181,19 +181,7 @@ bool Beam_Channels::CreateChannels() {
   if (m_beamparams.size() < 1) return 0;
   size_t mode = 0;
   if (p_beamspectra->BeamMode() == BEAM::beammode::collider) {
-    switch (p_beamspectra->ColliderMode()) {
-      case BEAM::collidermode::spectral_1:
-        mode = 1;
-        break;
-      case BEAM::collidermode::spectral_2:
-        mode = 2;
-        break;
-      case BEAM::collidermode::both_spectral:
-        mode = 3;
-        break;
-      default:
-        break;
-    }
+    mode = (int) p_beamspectra->ColliderMode();
   }
   for (size_t i = 0; i < m_beamparams.size(); i++) {
     switch (m_beamparams[i].type) {

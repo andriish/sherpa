@@ -127,16 +127,13 @@ bool COMIX::Single_Process::Initialize
   // stype -> 0 QCD, 1 QED
   // smode -> 0 LO, 1 RS, 2 I, 4 B, 8 Polecheck, 16 V
   if (m_pinfo.m_fi.m_nlocpl.size()) {
-    if (m_pinfo.m_fi.m_nlocpl[0]==0. &&
-        m_pinfo.m_fi.m_nlocpl[1]==0.) stype=0;
-    else if (m_user_stype&sbt::qcd &&
-             m_pinfo.m_fi.m_nlocpl[0]==1. &&
-             m_pinfo.m_fi.m_nlocpl[1]==0.) stype=0;
-    else if (m_user_stype&sbt::qed &&
-             m_pinfo.m_fi.m_nlocpl[0]==0. &&
-             m_pinfo.m_fi.m_nlocpl[1]==1.) stype=1;
-    else THROW(fatal_error,"Cannot do NLO QCD+EW");
-    msg_Debugging()<<"Subtraction type: "<<(sbt::subtype)(stype+1)<<"\n";
+    if (m_user_stype&sbt::qcd ||
+	(m_pinfo.m_fi.m_nlocpl[0]==1. &&
+	 m_pinfo.m_fi.m_nlocpl[1]==0.)) stype|=1;
+    if (m_user_stype&sbt::qed ||
+	(m_pinfo.m_fi.m_nlocpl[0]==0. &&
+	 m_pinfo.m_fi.m_nlocpl[1]==1.)) stype|=2;
+    msg_Debugging()<<"Subtraction type: "<<(sbt::subtype)(stype)<<"\n";
   }
   if (m_pinfo.m_fi.NLOType()&nlo_type::rsub) smode=1;
   else {
@@ -154,7 +151,7 @@ bool COMIX::Single_Process::Initialize
   for (size_t i(0);i<maxcpl.size();++i) maxcpl[i]=m_pinfo.m_maxcpl[i]*2;
   for (size_t i(0);i<minacpl.size();++i) minacpl[i]=m_pinfo.m_minacpl[i];
   for (size_t i(0);i<maxacpl.size();++i) maxacpl[i]=m_pinfo.m_maxacpl[i];
-  if (smode&18)
+  if (smode&22)
     for (int i(0);i<2;++i) {
       maxcpl[i]-=m_pinfo.m_fi.m_nlocpl[i]*2;
       mincpl[i]-=m_pinfo.m_fi.m_nlocpl[i]*2;
@@ -213,7 +210,7 @@ bool COMIX::Single_Process::Initialize
       }
       p_loop->SetCouplings(m_cpls);
       p_loop->SetNorm(1.0/(isf*fsf));
-      p_loop->SetSubType((sbt::subtype)(stype+1));
+      p_loop->SetSubType((sbt::subtype)(stype));
       p_loop->SetPoleCheck(m_checkpoles);
       m_mewgtinfo.m_type|=mewgttype::VI;
     }

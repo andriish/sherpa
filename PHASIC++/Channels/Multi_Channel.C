@@ -318,8 +318,7 @@ void Multi_Channel::GeneratePoint(Vec4D *p,Cut_Data * cuts)
   }
 }
 
-void Multi_Channel::GeneratePoint(int mode)
-{
+void Multi_Channel::GeneratePoint() {
   if (m_erans.size()) msg_Debugging()<<METHOD<<"(): Generating variables\n";
   for (std::map<std::string,double>::iterator
 	 it(m_erans.begin());it!=m_erans.end();++it) {
@@ -349,7 +348,7 @@ void Multi_Channel::GeneratePoint(int mode)
   Abort();
 }
 
-void Multi_Channel::GenerateWeight(int mode)
+void Multi_Channel::GenerateWeight()
 {
   if (channels.size()==1) {
     channels[0]->GenerateWeight();
@@ -363,7 +362,7 @@ void Multi_Channel::GenerateWeight(int mode)
       if (!(channels[i]->Weight()>0)&&
 	  !(channels[i]->Weight()<0)&&(channels[i]->Weight()!=0)) {
 	msg_Error()<<"Multi_Channel::GenerateWeight(): ("<<this->name
-		   <<"): Channel "<<i<<" ("<<channels[i]<<") produces a nan!"<<endl;
+		   <<"): Channel "<<i<<" ("<<channels[i]->Name()<<") produces a nan!"<<endl;
       }
       if (channels[i]->Weight()!=0)
 	m_weight += channels[i]->Alpha()/channels[i]->Weight();
