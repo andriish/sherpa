@@ -14,7 +14,7 @@ using namespace MODEL;
 using namespace std;
 
 #define lorentz_type
-
+#undef GetObject
 extern int iabs(int&);
 
 Zfunc_Generator::~Zfunc_Generator() 

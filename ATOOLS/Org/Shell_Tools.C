@@ -9,7 +9,9 @@
 #include <dirent.h>
 #include <cstdlib>
 #include <unistd.h>
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
 #include <regex.h>
+#endif
 #if __GNUC__
 #include <cxxabi.h>
 #endif
@@ -32,7 +34,11 @@ bool ATOOLS::MakeDir(std::string path,const bool create_tree,
   if (path[path.length()-1]!='/') path+="/";
   if (!create_tree) {
 #ifndef USING__MPI
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
     int exists(!mkdir(path.c_str(),mode));
+#else
+    int exists =1 ;    
+#endif
 #else
     int exists(mpi->Rank()?0:!mkdir(path.c_str(),mode));
     mpi->Bcast(&exists,1,MPI_INT);
@@ -52,7 +58,11 @@ bool ATOOLS::MakeDir(std::string path,const bool create_tree,
 #endif
     if (DirectoryExists(piece)) continue;
 #ifndef USING__MPI
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
     int result(mkdir(piece.c_str(),mode));
+#else 
+    int result =1;    
+#endif
 #else
     int result(mpi->Rank()?0:mkdir(piece.c_str(),mode));
     mpi->Bcast(&result,1,MPI_INT);
@@ -274,7 +284,11 @@ std::string ATOOLS::Demangle(const std::string &name)
 
 std::string ATOOLS::GetCWD()
 {
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
   long int size = pathconf(".",_PC_PATH_MAX);
+#else
+ long int size = 1;
+#endif
   char *buf = new char[size];
   char *ptr = getcwd(buf, (size_t)size);
   if (ptr==NULL) Abort();
@@ -287,6 +301,7 @@ std::vector<std::string> ATOOLS::RegExMatch
 (const std::string &str,const std::string &pat,const size_t nm)
 {
   std::vector<std::string> res;
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
   regex_t re;
   if (regcomp(&re,pat.c_str(),REG_EXTENDED)!=0) return res;
   std::vector<regmatch_t> pm(nm);
@@ -296,6 +311,7 @@ std::vector<std::string> ATOOLS::RegExMatch
       res.push_back(str.substr(pm[i].rm_so,pm[i].rm_eo-pm[i].rm_so));
   }
   regfree(&re);
+#endif
   return res;
 }
 

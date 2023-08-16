@@ -22,6 +22,7 @@
 #include "ATOOLS/Org/MyStrStream.H"
 #include "ATOOLS/Org/Exception.H"
 #include "ATOOLS/Org/Scoped_Settings.H"
+#undef GetObject
 
 namespace SHNNLO {
 

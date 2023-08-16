@@ -9,6 +9,7 @@
 #include "ATOOLS/Phys/KF_Table.H"
 
 #include <algorithm>
+#undef GetObject
 
 namespace MODEL {
   Running_AlphaS * as =0;

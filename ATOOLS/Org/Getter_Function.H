@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include <string>
-
+#undef GetObject
 namespace ATOOLS {
 
   class String_Sort;

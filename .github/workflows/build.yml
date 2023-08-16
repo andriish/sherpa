@@ -1,0 +1,24 @@
+name: SherpaWin
+
+on:
+  push:
+    branches: [ "WINCI" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+#    environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          vcpkg install zlib
+          vcpkg install libzip
+          dir C:/vcpkg/packages/libzip_x86-windows
+          dir C:/vcpkg/packages/libzip_x86-windows/include
+          cmake -S. -B BUILD -DLibZip_DIR=C:/vcpkg/packages/libzip_x86-windows -DSHERPA_ENABLE_LHAPDF=OFF -DLIBZIP_INCLUDE_DIRS=C:/vcpkg/packages/libzip_x86-windows/include -DSHERPA_ENABLE_INTERNAL_PDFS=OFF -DSHERPA_ENABLE_ANALYSIS:BOOL=OFF  -DSHERPA_ENABLE_BINRELOC:BOOL=OFF  -DSHERPA_ENABLE_BLACKHAT:BOOL=OFF  -DSHERPA_ENABLE_DIHIGGS:BOOL=OFF  -DSHERPA_ENABLE_EWSUD:BOOL=OFF  -DSHERPA_ENABLE_EXAMPLES:BOOL=OFF  -DSHERPA_ENABLE_GOSAM:BOOL=OFF  -DSHERPA_ENABLE_GZIP:BOOL=OFF  -DSHERPA_ENABLE_HEPMC2:BOOL=OFF  -DSHERPA_ENABLE_HEPMC3:BOOL=OFF  -DSHERPA_ENABLE_HEPMC3_ROOT:BOOL=OFF  -DSHERPA_ENABLE_HZTOOL:BOOL=OFF  -DSHERPA_ENABLE_LHAPDF:BOOL=OFF  -DSHERPA_ENABLE_LHOLE:BOOL=OFF  -DSHERPA_ENABLE_MADLOOP:BOOL=OFF  -DSHERPA_ENABLE_MANUAL:BOOL=OFF  -DSHERPA_ENABLE_MCFM:BOOL=OFF  -DSHERPA_ENABLE_MPI:BOOL=OFF  -DSHERPA_ENABLE_OPENLOOPS:BOOL=OFF  -DSHERPA_ENABLE_PYTHIA6:BOOL=OFF  -DSHERPA_ENABLE_PYTHIA8:BOOL=OFF  -DSHERPA_ENABLE_PYTHON:BOOL=OFF  -DSHERPA_ENABLE_RECOLA:BOOL=OFF  -DSHERPA_ENABLE_RIVET:BOOL=OFF  -DSHERPA_ENABLE_ROOT:BOOL=OFF  -DSHERPA_ENABLE_THREADING:BOOL=OFF
+          cmake --build BUILD 
+          cmake --install BUILD 
+         

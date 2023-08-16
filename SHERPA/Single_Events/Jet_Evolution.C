@@ -7,6 +7,7 @@
 #include "MODEL/Main/Running_AlphaS.H"
 #include "REMNANTS/Main/Remnant_Handler.H"
 #include "SHERPA/PerturbativePhysics/Perturbative_Interface.H"
+#undef interface
 #include <map>
 
 using namespace SHERPA;

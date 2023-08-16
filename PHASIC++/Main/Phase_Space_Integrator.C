@@ -171,7 +171,9 @@ double Phase_Space_Integrator::Calculate(double _maxerror, double _maxabserror,
 			 <<ATOOLS::om::reset<<ATOOLS::om::red
 			 <<"Timeout. Interrupt integration."
 			 <<ATOOLS::om::reset<<std::endl;
+#if defined(__linux__) || defined(__darwin__) || defined(__APPLE__) || defined(BSD) || defined(__sun)
       kill(getpid(),SIGINT);
+#endif      
     }
 
     if (AddPoint(double(p_psh->Differential(Variations_Mode::nominal_only)))) {

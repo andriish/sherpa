@@ -45,6 +45,7 @@
 
 #include <sys/stat.h>
 #include <time.h>
+#undef GetObject
 
 using namespace SHERPA;
 using namespace MODEL;
@@ -341,7 +342,7 @@ Initialization_Handler::~Initialization_Handler()
   for (set<string>::iterator pdflib=m_pdflibs.begin(); pdflib!=m_pdflibs.end();
        ++pdflib) {
     if (*pdflib=="None") continue;
-    void *exit(s_loader->GetLibraryFunction(*pdflib,"ExitPDFLib"));
+    void *exit(s_loader->GetLibraryFunction(*pdflib,std::string("ExitPDFLib")));
     if (exit==NULL)
       PRINT_INFO("Error: Cannot unload PDF library "+*pdflib);
     else ((PDF_Exit_Function)exit)();

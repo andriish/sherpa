@@ -23,6 +23,8 @@
 #include <typeinfo>
 #include <cstdlib>
 
+#undef GetObject
+
 using namespace ATOOLS;
 
 template<class ObjectType,class ParameterType,class SortCriterion>

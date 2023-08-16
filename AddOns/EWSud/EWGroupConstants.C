@@ -270,7 +270,8 @@ Couplings EWGroupConstants::Ipm(const Flavour& flav,
   } else if (signed_kf == kf_photon) {
     return {{(isplus ? 1.0 : -1.0) * kf_Wplus, (isplus ? -1.0 : 1.0)}};
   } else if (signed_kf == kf_h0){
-    return {{(isplus ? 1.0 : -1.0) * kf_phiplus, {0.0, 1.0 / (2.0 * m_sw)}}};
+//FIXME    return {{(isplus ? 1.0 : -1.0) * kf_phiplus, {0.0, 1.0 / (2.0 * m_sw)}}};
+    return {{(isplus ? 1.0 : -1.0) * kf_phiplus, 1.0 / (2.0 * m_sw)}};
   } else if (signed_kf == kf_gluon) {
     return Couplings{};
   } else {

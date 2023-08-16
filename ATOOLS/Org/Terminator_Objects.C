@@ -24,6 +24,7 @@ Terminator_Object_Handler::Terminator_Object_Handler():
   m_noremove(false),
   m_nbus(0), m_nsegv(0)
 {
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
   std::set_terminate(ATOOLS::Terminate);
   signal(SIGSEGV,ATOOLS::HandleSignal);
   signal(SIGINT,ATOOLS::HandleSignal);
@@ -34,6 +35,7 @@ Terminator_Object_Handler::Terminator_Object_Handler():
   signal(SIGTERM,ATOOLS::HandleSignal);
   signal(SIGXCPU,ATOOLS::HandleSignal);
   signal(SIGUSR1,ATOOLS::HandleSignal);
+#endif
 }
 
 bool Terminator_Object_Handler::ReadInStatus(const std::string &path)
@@ -130,6 +132,7 @@ void Terminator_Object_Handler::HandleSignal(int signal)
 	     <<"("<<om::red<<signal<<om::reset<<om::bold<<")"
 	     <<om::reset<<om::blue<<" caught. "<<om::reset<<std::endl;
 
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
 
   if (signal!=SIGINT)
     {
@@ -198,5 +201,6 @@ void Terminator_Object_Handler::HandleSignal(int signal)
     msg_Error()<<"   Cannot handle signal."<<om::reset<<std::endl;
     Terminate(1);
   }
+#endif
 
 }

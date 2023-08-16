@@ -5,6 +5,7 @@
 #include "PHASIC++/Process/ME_Generators.H"
 #include "SHERPA/PerturbativePhysics/Matrix_Element_Handler.H"
 #include "SHERPA/SoftPhysics/Resonance_Finder.H"
+#undef interface
 
 using namespace ATOOLS;
 using namespace PHASIC;

@@ -86,5 +86,5 @@ sherpa_create_git_info(Org)
 add_library(ToolsOrg SHARED ${Org_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/Git_Info.C )
 sherpa_handle_shared_library(ToolsOrg ToolsOrg)
 
-target_link_libraries(ToolsOrg PRIVATE LibZip::LibZip)
+target_link_libraries(ToolsOrg PUBLIC LibZip::LibZip)
 target_link_libraries(ToolsOrg PRIVATE ${CMAKE_DL_LIBS})

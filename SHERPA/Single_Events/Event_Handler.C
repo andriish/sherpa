@@ -151,7 +151,9 @@ bool Event_Handler::GenerateEvent(eventtype::code mode)
                      <<ATOOLS::om::reset<<ATOOLS::om::red
                      <<"Timeout. Interrupt event generation."
                      <<ATOOLS::om::reset<<std::endl;
+#if defined(__linux__) || defined(__darwin__) || defined(__APPLE__) || defined(BSD) || defined(__sun)
     kill(getpid(),SIGINT);
+#endif
   }
   switch (mode) {
   case eventtype::StandardPerturbative:

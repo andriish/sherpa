@@ -7,11 +7,15 @@
 #include "ATOOLS/Org/CXXFLAGS.H"
 
 #include <sys/stat.h>
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
 #include <dlfcn.h>
+#endif
 #include <fstream>
 #include <unistd.h>
 #include <iomanip>
 #include <assert.h>
+#undef interface 
+#undef LoadLibrary 
 
 using namespace ATOOLS;
 
@@ -36,7 +40,9 @@ bool Library_Loader::CreateLockFile(const std::string &lockname)
 	      <<"'. Waiting for unlock ...          "<<std::flush;
     size_t check(1), i(0);
     for (i=0;i<m_wait;i+=check) {
+#if defined(__linux__) || defined(__darwin__) || defined(__APPLE__) || defined(BSD) || defined(__sun)
       sleep(check);
+#endif
       msg_Info()<<mm(9,mm::left)<<std::setw(6)<<i<<" s "<<std::flush;
       if (stat(lockname.c_str(),&buffer)) break;
     }
@@ -70,7 +76,10 @@ void Library_Loader::UnloadLibrary(const std::string &name,void *module)
 {
   std::map<std::string,void*>::iterator lit(m_libs.find(name));
   if (lit!=m_libs.end()) m_libs.erase(lit);
+#if defined(__linux__) || defined(__darwin__) || defined(__APPLE__) || defined(BSD) || defined(__sun)
+
   dlclose(module);
+#endif
 }
 
 bool Library_Loader::LibraryIsLoaded(const std::string &name)
@@ -111,6 +120,7 @@ void *Library_Loader::LoadLibrary(const std::string &path,
 				  const std::string &name)
 {
   std::string fullpath(path+"/lib"+name+LIB_SUFFIX);
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
 
   struct stat buffer;
   if (stat(fullpath.c_str(),&buffer))
@@ -130,6 +140,9 @@ void *Library_Loader::LoadLibrary(const std::string &path,
     THROW(fatal_error, std::string("Error loading library: ") + err);
   assert(module!=NULL);
   return module;
+#else
+return nullptr;
+#endif
 }
 
 void *Library_Loader::GetLibraryFunction(const std::string &libname,
@@ -138,6 +151,8 @@ void *Library_Loader::GetLibraryFunction(const std::string &libname,
   msg_Debugging()<<"executing library function '"<<funcname
 		 <<"' from 'lib"<<libname<<LIB_SUFFIX<<"' ... "<<std::flush;
   void *module(LoadLibrary(libname));
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
+
   if (module==NULL) return NULL;
   void *func(dlsym(module,funcname.c_str()));
   char *error(dlerror());
@@ -150,6 +165,9 @@ void *Library_Loader::GetLibraryFunction(const std::string &libname,
   }
   msg_Debugging()<<"done"<<std::endl;
   return func;
+#else
+return nullptr;
+#endif
 }
 
 void *Library_Loader::GetLibraryFunction(const std::string &libname,
@@ -166,6 +184,7 @@ void *Library_Loader::GetLibraryFunction(const std::string &libname,
 void *Library_Loader::GetLibraryFunction(const std::string &funcname,
 					 void * const & module) const
 {
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
   void *func(dlsym(module,funcname.c_str()));
   char *error(dlerror());
   if (error!=NULL) {
@@ -177,6 +196,9 @@ void *Library_Loader::GetLibraryFunction(const std::string &funcname,
   }
   msg_Debugging()<<"done"<<std::endl;
   return func;
+#else
+return nullptr;
+#endif
 }
 
 void Library_Loader::AddPath(const std::string &path,const int mode)

@@ -122,8 +122,10 @@ void ATOOLS::Abort(const int mode)
 #ifdef USING__MPI
   MPI_Abort(MPI_COMM_WORLD, 1 + mode);
 #else
+#if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
   if (mode)
     kill(getpid(), 9);
+#endif
   abort();
 #endif
 }

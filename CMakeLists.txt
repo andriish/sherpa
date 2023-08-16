@@ -170,6 +170,35 @@ message(STATUS "SHERPA: CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}=${CMAKE_CXX_FLAGS_${
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 set(CXX_CXX_FLAGS_TO_CHECK -Wno-tautological-constant-compare)
+if (MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" )
+#Memory problem and false positive warnings.
+  include_directories(${PROJECT_SOURCE_DIR}/SherpaWindows)
+  set(CXX_CXX_FLAGS_TO_CHECK "/bigobj" "/D_CRT_SECURE_NO_WARNINGS" "/DWIN32_LEAN_AND_MEAN" "/DNOMINMAX" "/DM_PI=3.141592" "/DM_E=2.7" 
+       "/wd4273" 
+       "/wd4305" 
+       "/wd4717" 
+       "/wd4834" 
+       "/wd4067" 
+       "/wd4018" 
+       "/wd4804"
+       "/wd4146" 
+       "/wd4312" 
+       "/wd4715" 
+       "/wd4554" 
+       "/wd4101" 
+       "/wd4003" 
+       "/wd4099" 
+       "/wd4805" 
+       "/wd4302" 
+       "/wd4311" 
+       "/wd4334" 
+       "/wd4267" 
+       "/wd4244" 
+       "/wd4477" 
+       "/wd4251"  
+       "/wd4250"
+       )
+endif()
 set ( NEW_CMAKE_CXX_FLAGS " ")
 string(REPLACE " " ";" LIST_CMAKE_CXX_FLAGS "${CXX_CXX_FLAGS_TO_CHECK} ${CMAKE_CXX_FLAGS}")
 foreach(fx IN LISTS LIST_CMAKE_CXX_FLAGS)
@@ -312,7 +341,10 @@ macro(sherpa_handle_shared_library  mylib mylibname)
        target_link_libraries(${mylib} PRIVATE MPI::MPI_Fortran)
      endif()
   endif()
-  target_include_directories(${mylib} PUBLIC
+#  if ( ( MSVC OR ${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC" ) AND NOT (${mylib} MATCHES "ToolsOrg" ) )
+#    target_link_libraries(${mylib} PRIVATE ToolsOrg)
+#  endif()
+  target_include_directories(${mylib} PUBLIC 
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SHERPA-MC${VERSIONING}>)

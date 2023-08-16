@@ -9,6 +9,7 @@
 #include "ATOOLS/Org/Run_Parameter.H"
 
 #include <cassert>
+#undef interface
 
 using namespace PHASIC;
 using namespace ATOOLS;
