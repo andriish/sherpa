@@ -16,6 +16,7 @@
 #include <assert.h>
 #undef interface 
 #undef LoadLibrary 
+
 using namespace ATOOLS;
 
 Library_Loader *ATOOLS::s_loader(NULL);
@@ -40,7 +41,6 @@ bool Library_Loader::CreateLockFile(const std::string &lockname)
     size_t check(1), i(0);
     for (i=0;i<m_wait;i+=check) {
 #if defined(__linux__) || defined(__darwin__) || defined(__APPLE__) || defined(BSD) || defined(__sun)
-
       sleep(check);
 #endif
       msg_Info()<<mm(9,mm::left)<<std::setw(6)<<i<<" s "<<std::flush;
@@ -135,7 +135,6 @@ void *Library_Loader::LoadLibrary(const std::string &path,
   if (!RemoveLockFile(rpa->gen.Variable("HOME")+
 		      "/.sherpa/.liblock")) return NULL;
   if (!RemoveLockFile(lockname)) return NULL;
-
   char *err(dlerror());
   if (err!=NULL)
     THROW(fatal_error, std::string("Error loading library: ") + err);
@@ -186,7 +185,6 @@ void *Library_Loader::GetLibraryFunction(const std::string &funcname,
 					 void * const & module) const
 {
 #if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
-	
   void *func(dlsym(module,funcname.c_str()));
   char *error(dlerror());
   if (error!=NULL) {
@@ -199,7 +197,6 @@ void *Library_Loader::GetLibraryFunction(const std::string &funcname,
   msg_Debugging()<<"done"<<std::endl;
   return func;
 #else
-
 return nullptr;
 #endif
 }

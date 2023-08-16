@@ -46,6 +46,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #undef GetObject
+
 using namespace SHERPA;
 using namespace MODEL;
 using namespace BEAM;

@@ -10,6 +10,7 @@
 
 #include <cassert>
 #undef interface
+
 using namespace PHASIC;
 using namespace ATOOLS;
 using namespace EWSud;

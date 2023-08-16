@@ -9,6 +9,7 @@
 
 #include <limits>
 #undef GetObject
+
 using namespace SHERPA;
 using namespace ATOOLS;
 

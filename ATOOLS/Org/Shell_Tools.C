@@ -302,7 +302,6 @@ std::vector<std::string> ATOOLS::RegExMatch
 {
   std::vector<std::string> res;
 #if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
-
   regex_t re;
   if (regcomp(&re,pat.c_str(),REG_EXTENDED)!=0) return res;
   std::vector<regmatch_t> pm(nm);

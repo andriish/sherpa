@@ -194,11 +194,11 @@ PertInterfaceIter Jet_Evolution::SelectInterface(Blob * blob) {
 
 Return_Value::code
 Jet_Evolution::AttachShowers(Blob *blob, Blob_List *bloblist,
-                             Perturbative_Interface *interface) {
-  p_remnants = interface->RemnantHandler();
-  if (!interface->Shower()->On() ||
-      (interface->MEHandler() &&
-       interface->MEHandler()->Process()->Info().m_nlomode ==
+                             Perturbative_Interface *interfacex) {
+  p_remnants = interfacex->RemnantHandler();
+  if (!interfacex->Shower()->On() ||
+      (interfacex->MEHandler() &&
+       interfacex->MEHandler()->Process()->Info().m_nlomode ==
            nlo_mode::fixedorder)) {
     AftermathOfNoShower(blob, bloblist);
     Blob * noshowerblob = bloblist->FindLast(btp::Shower);
@@ -206,15 +206,15 @@ Jet_Evolution::AttachShowers(Blob *blob, Blob_List *bloblist,
     return Return_Value::Nothing;
   }
   int shower(0);
-  Return_Value::code stat(interface->DefineInitialConditions(blob, bloblist));
+  Return_Value::code stat(interfacex->DefineInitialConditions(blob, bloblist));
   if (stat == Return_Value::New_Event || stat == Return_Value::Retry_Event) {
-    interface->CleanUp();
+    interfacex->CleanUp();
     return stat;
   }
   if (blob->Type() != ::btp::Hadron_Decay) {
     msg_Debugging() << METHOD << "(): Setting scale for MI {\n";
     double scale(0.0);
-    Cluster_Amplitude *ampl(interface->Amplitude());
+    Cluster_Amplitude *ampl(interfacex->Amplitude());
     while (ampl->Next())
       ampl = ampl->Next();
     msg_Debugging() << *ampl << "\n";
@@ -225,18 +225,18 @@ Jet_Evolution::AttachShowers(Blob *blob, Blob_List *bloblist,
   switch (stat) {
   case Return_Value::Success:
     if (blob->Type() != ::btp::Hadron_Decay)
-      DefineInitialConditions(blob, bloblist, interface);
-    if (blob->NInP() == 1) shower = interface->PerformDecayShowers();
+      DefineInitialConditions(blob, bloblist, interfacex);
+    if (blob->NInP() == 1) shower = interfacex->PerformDecayShowers();
     else if (blob->NInP() == 2) {
-      shower = interface->PerformShowers();
+      shower = interfacex->PerformShowers();
       blob->UnsetStatus(blob_status::needs_beamRescatter);
     }
     switch (shower) {
     case 1:
       // No Sudakov rejection
       Reset();
-      if (AftermathOfSuccessfulShower(blob, bloblist, interface)) {
-        interface->CleanUp();
+      if (AftermathOfSuccessfulShower(blob, bloblist, interfacex)) {
+        interfacex->CleanUp();
         return Return_Value::Success;
       }
       blob->SetStatus(blob_status::inactive);
@@ -252,7 +252,7 @@ Jet_Evolution::AttachShowers(Blob *blob, Blob_List *bloblist,
     }
   case Return_Value::Nothing:
     if (AftermathOfNoShower(blob, bloblist)) {
-      interface->CleanUp();
+      interfacex->CleanUp();
       return Return_Value::Success;
     }
     blob->SetStatus(blob_status::inactive);
@@ -309,13 +309,13 @@ bool Jet_Evolution::AftermathOfNoShower(Blob *blob, Blob_List *bloblist) {
 }
 
 bool Jet_Evolution::AftermathOfSuccessfulShower(Blob *blob, Blob_List *bloblist,
-						Perturbative_Interface *interface) {
+						Perturbative_Interface *interfacex) {
   if (blob->NInP() == 1 && blob->Type() != btp::Hadron_Decay)
     blob->InParticle(0)->SetInfo('h');
-  interface->FillBlobs();
+  interfacex->FillBlobs();
   blob->UnsetStatus(blob_status::needs_showers);
   Blob *showerblob =
-      (!interface->Shower()->On() ? CreateMockShowerBlobs(blob, bloblist)
+      (!interfacex->Shower()->On() ? CreateMockShowerBlobs(blob, bloblist)
                                   : bloblist->FindLast(btp::Shower));
   if (showerblob==NULL || blob->Type()== btp::Hadron_Decay) return true;
   showerblob->AddStatus(blob_status::needs_reconnections);
@@ -383,14 +383,14 @@ void Jet_Evolution::Reset() {
 
 bool Jet_Evolution::DefineInitialConditions(const Blob *blob,
                                             const Blob_List *bloblist,
-                                            Perturbative_Interface *interface) {
+                                            Perturbative_Interface *interfacex) {
   Reset();
   msg_Debugging() << METHOD << "(): {\n";
   for (::Blob_List::const_iterator blit = bloblist->begin();
        blit != bloblist->end(); ++blit) {
     if ((*blit)->Type() == ::btp::Shower) {
-      // Update(*blit,0, interface);
-      // Update(*blit,1, interface);
+      // Update(*blit,0, interfacex);
+      // Update(*blit,1, interfacex);
     }
   }
   msg_Debugging() << "}\n";
@@ -398,7 +398,7 @@ bool Jet_Evolution::DefineInitialConditions(const Blob *blob,
 }
 
 void Jet_Evolution::Update(Blob *blob, const size_t beam,
-                           Perturbative_Interface *interface) {
+                           Perturbative_Interface *interfacex) {
   size_t cbeam = 0;
   for (int i = 0; i < blob->NInP(); ++i) {
     Particle *cur = blob->InParticle(i);

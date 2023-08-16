@@ -15,6 +15,7 @@ namespace ATOOLS {
   template<> const Vec3D Vec3D::XVEC=Vec3D(1.,0.,0.);
   template<> const Vec3D Vec3D::YVEC=Vec3D(0.,1.,0.);
   template<> const Vec3D Vec3D::ZVEC=Vec3D(0.,0.,1.);
+
 #endif
 }
 

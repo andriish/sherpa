@@ -8,6 +8,7 @@
 #include "ATOOLS/Org/Message.H"
 #include "ATOOLS/Org/Scoped_Settings.H"
 #undef GetObject
+
 using namespace SHERPA;
 using namespace ATOOLS;
 

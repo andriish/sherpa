@@ -23,6 +23,7 @@
 #include "ATOOLS/Org/Exception.H"
 #include "ATOOLS/Org/Scoped_Settings.H"
 #undef GetObject
+
 namespace SHNNLO {
 
   class Scale_Setter: public PHASIC::Scale_Setter_Base {

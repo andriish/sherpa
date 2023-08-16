@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <memory>
 #undef GetObject
+
 using namespace PHASIC;
 using namespace MODEL;
 using namespace ATOOLS;

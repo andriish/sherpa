@@ -25,7 +25,6 @@ Terminator_Object_Handler::Terminator_Object_Handler():
   m_nbus(0), m_nsegv(0)
 {
 #if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
-
   std::set_terminate(ATOOLS::Terminate);
   signal(SIGSEGV,ATOOLS::HandleSignal);
   signal(SIGINT,ATOOLS::HandleSignal);
